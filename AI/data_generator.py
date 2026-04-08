@@ -9,11 +9,11 @@ Genera datos realistas que replican los patrones:
   - Variabilidad estocastica para emular la vida real.
 
 Uso:
-  python entregable_1_generador_datos.py                       # genera datos en consola
-  python entregable_1_generador_datos.py --output data.json    # guarda en archivo JSON
-  python entregable_1_generador_datos.py --upload              # genera y sube a DynamoDB
-  python entregable_1_generador_datos.py --s3-bucket mi-bucket  # sube a S3
-  python entregable_1_generador_datos.py --users 5 --seed 42   # reproducible, 5 usuarios
+  python data_generator.py                       # genera datos en consola
+  python data_generator.py --output data.json    # guarda en archivo JSON
+  python data_generator.py --upload              # genera y sube a DynamoDB
+  python data_generator.py --s3-bucket mi-bucket  # sube a S3
+  python data_generator.py --users 5 --seed 42   # reproducible, 5 usuarios
 
 Dependencias: numpy, boto3 (opcional, solo para --upload/--s3-bucket)
 Autor: Equipo Incomia
@@ -60,132 +60,36 @@ S3_PREFIX = "incomia_data/"
 # ════════════════════════════════════════════════════════════
 
 USER_PROFILES = [
-    # ── Delivery (6 usuarios) ─────────────────────────────────
+    # ── Delivery (1 usuario) ─────────────────────────────────
     {
         "user_id": "USR-1001", "primary_sector": "Delivery",
         "artificial_salary": 0.0, "stabilization_fund_balance": 500.0,
         "resilience_goal_type": "3 meses de gastos fijos",
         "resilience_goal_target": 22500.0, "current_risk_score": 45,
     },
-    {
-        "user_id": "USR-1004", "primary_sector": "Delivery",
-        "artificial_salary": 0.0, "stabilization_fund_balance": 0.0,
-        "resilience_goal_type": "3 meses de gastos fijos",
-        "resilience_goal_target": 18000.0, "current_risk_score": 88,
-    },
-    {
-        "user_id": "USR-1006", "primary_sector": "Delivery",
-        "artificial_salary": 0.0, "stabilization_fund_balance": 2100.0,
-        "resilience_goal_type": "3 meses de gastos fijos",
-        "resilience_goal_target": 21000.0, "current_risk_score": 38,
-    },
-    {
-        "user_id": "USR-1010", "primary_sector": "Delivery",
-        "artificial_salary": 0.0, "stabilization_fund_balance": 50.0,
-        "resilience_goal_type": "1 mes de gastos fijos",
-        "resilience_goal_target": 7500.0, "current_risk_score": 92,
-    },
-    {
-        "user_id": "USR-1014", "primary_sector": "Delivery",
-        "artificial_salary": 0.0, "stabilization_fund_balance": 4200.0,
-        "resilience_goal_type": "3 meses de gastos fijos",
-        "resilience_goal_target": 22500.0, "current_risk_score": 25,
-    },
-    {
-        "user_id": "USR-1018", "primary_sector": "Delivery",
-        "artificial_salary": 0.0, "stabilization_fund_balance": 800.0,
-        "resilience_goal_type": "1 mes de gastos fijos",
-        "resilience_goal_target": 7500.0, "current_risk_score": 60,
-    },
 
-    # ── Freelance Dev (5 usuarios) ────────────────────────────
+    # ── Freelance Dev (1 usuario) ────────────────────────────
     {
         "user_id": "USR-1002", "primary_sector": "Freelance_Dev",
         "artificial_salary": 0.0, "stabilization_fund_balance": 3200.0,
         "resilience_goal_type": "6 meses de gastos fijos",
         "resilience_goal_target": 54000.0, "current_risk_score": 30,
     },
-    {
-        "user_id": "USR-1007", "primary_sector": "Freelance_Dev",
-        "artificial_salary": 0.0, "stabilization_fund_balance": 15000.0,
-        "resilience_goal_type": "6 meses de gastos fijos",
-        "resilience_goal_target": 66000.0, "current_risk_score": 12,
-    },
-    {
-        "user_id": "USR-1011", "primary_sector": "Freelance_Dev",
-        "artificial_salary": 0.0, "stabilization_fund_balance": 0.0,
-        "resilience_goal_type": "3 meses de gastos fijos",
-        "resilience_goal_target": 33000.0, "current_risk_score": 75,
-    },
-    {
-        "user_id": "USR-1015", "primary_sector": "Freelance_Dev",
-        "artificial_salary": 0.0, "stabilization_fund_balance": 8400.0,
-        "resilience_goal_type": "6 meses de gastos fijos",
-        "resilience_goal_target": 54000.0, "current_risk_score": 22,
-    },
-    {
-        "user_id": "USR-1019", "primary_sector": "Freelance_Dev",
-        "artificial_salary": 0.0, "stabilization_fund_balance": 1200.0,
-        "resilience_goal_type": "3 meses de gastos fijos",
-        "resilience_goal_target": 33000.0, "current_risk_score": 55,
-    },
 
-    # ── Rideshare (5 usuarios) ────────────────────────────────
+    # ── Rideshare (1 usuario) ────────────────────────────────
     {
         "user_id": "USR-1003", "primary_sector": "Rideshare",
         "artificial_salary": 0.0, "stabilization_fund_balance": 150.0,
         "resilience_goal_type": "1 mes de gastos fijos",
         "resilience_goal_target": 8000.0, "current_risk_score": 72,
     },
-    {
-        "user_id": "USR-1008", "primary_sector": "Rideshare",
-        "artificial_salary": 0.0, "stabilization_fund_balance": 5600.0,
-        "resilience_goal_type": "3 meses de gastos fijos",
-        "resilience_goal_target": 27600.0, "current_risk_score": 28,
-    },
-    {
-        "user_id": "USR-1012", "primary_sector": "Rideshare",
-        "artificial_salary": 0.0, "stabilization_fund_balance": 0.0,
-        "resilience_goal_type": "1 mes de gastos fijos",
-        "resilience_goal_target": 9200.0, "current_risk_score": 85,
-    },
-    {
-        "user_id": "USR-1016", "primary_sector": "Rideshare",
-        "artificial_salary": 0.0, "stabilization_fund_balance": 3000.0,
-        "resilience_goal_type": "3 meses de gastos fijos",
-        "resilience_goal_target": 27600.0, "current_risk_score": 40,
-    },
-    {
-        "user_id": "USR-1020", "primary_sector": "Rideshare",
-        "artificial_salary": 0.0, "stabilization_fund_balance": 900.0,
-        "resilience_goal_type": "1 mes de gastos fijos",
-        "resilience_goal_target": 9200.0, "current_risk_score": 65,
-    },
 
-    # ── Freelance Design (4 usuarios) ─────────────────────────
+    # ── Freelance Design (1 usuario) ─────────────────────────
     {
         "user_id": "USR-1005", "primary_sector": "Freelance_Design",
         "artificial_salary": 0.0, "stabilization_fund_balance": 8500.0,
         "resilience_goal_type": "6 meses de gastos fijos",
         "resilience_goal_target": 60000.0, "current_risk_score": 15,
-    },
-    {
-        "user_id": "USR-1009", "primary_sector": "Freelance_Design",
-        "artificial_salary": 0.0, "stabilization_fund_balance": 200.0,
-        "resilience_goal_type": "3 meses de gastos fijos",
-        "resilience_goal_target": 28500.0, "current_risk_score": 78,
-    },
-    {
-        "user_id": "USR-1013", "primary_sector": "Freelance_Design",
-        "artificial_salary": 0.0, "stabilization_fund_balance": 12000.0,
-        "resilience_goal_type": "6 meses de gastos fijos",
-        "resilience_goal_target": 57000.0, "current_risk_score": 18,
-    },
-    {
-        "user_id": "USR-1017", "primary_sector": "Freelance_Design",
-        "artificial_salary": 0.0, "stabilization_fund_balance": 1500.0,
-        "resilience_goal_type": "3 meses de gastos fijos",
-        "resilience_goal_target": 28500.0, "current_risk_score": 52,
     },
 ]
 
