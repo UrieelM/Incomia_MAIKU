@@ -1,0 +1,49 @@
+{
+  "Comment": "EventBridge Rules para Incomia — Microservicios Desacoplados",
+  "EventBusName": "incomia-events",
+  "Rules": [
+    {
+      "Name": "incomia-data-ingested-to-forecast",
+      "Description": "Cuando data_generator inyecta datos, dispara liquidity_forecast",
+      "EventPattern": {
+        "source": ["incomia.data-generator"],
+        "detail-type": ["DataIngested"]
+      },
+      "Targets": [
+        {
+          "Arn": "arn:aws:lambda:us-east-1:ACCOUNT_ID:function:incomia-liquidity-forecast",
+          "Id": "LiquidityForecastTarget",
+          "InputTransformer": {
+            "InputPathsMap": {
+              "user_ids": "$.detail.user_ids",
+              "transaction_count": "$.detail.transaction_count",
+              "timestamp": "$.detail.timestamp"
+            },
+            "InputTemplate": "{\"detail-type\": \"DataIngested\", \"detail\": {\"user_ids\": <user_ids>, \"transaction_count\": <transaction_count>, \"timestamp\": <timestamp>}}"
+          }
+        }
+      ]
+    },
+    {
+      "Name": "incomia-forecast-ready-to-advisor",
+      "Description": "Cuando liquidity_forecast termina, dispara ai_advisor",
+      "EventPattern": {
+        "source": ["incomia.liquidity-forecast"],
+        "detail-type": ["ForecastReady"]
+      },
+      "Targets": [
+        {
+          "Arn": "arn:aws:lambda:us-east-1:ACCOUNT_ID:function:incomia-ai-advisor",
+          "Id": "AIAdvisorTarget"
+        }
+      ]
+    }
+  ],
+  "DeployCommands": [
+    "aws events create-event-bus --name incomia-events",
+    "aws events put-rule --name incomia-data-ingested-to-forecast --event-bus-name incomia-events --event-pattern '{\"source\":[\"incomia.data-generator\"],\"detail-type\":[\"DataIngested\"]}'",
+    "aws events put-targets --rule incomia-data-ingested-to-forecast --event-bus-name incomia-events --targets '[{\"Id\":\"LiquidityForecastTarget\",\"Arn\":\"arn:aws:lambda:us-east-1:ACCOUNT_ID:function:incomia-liquidity-forecast\"}]'",
+    "aws events put-rule --name incomia-forecast-ready-to-advisor --event-bus-name incomia-events --event-pattern '{\"source\":[\"incomia.liquidity-forecast\"],\"detail-type\":[\"ForecastReady\"]}'",
+    "aws events put-targets --rule incomia-forecast-ready-to-advisor --event-bus-name incomia-events --targets '[{\"Id\":\"AIAdvisorTarget\",\"Arn\":\"arn:aws:lambda:us-east-1:ACCOUNT_ID:function:incomia-ai-advisor\"}]'"
+  ]
+}

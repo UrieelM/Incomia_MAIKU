@@ -1,0 +1,120 @@
+{
+  "Comment": "Politicas IAM de Menor Privilegio — Incomia Microservicios",
+  "Policies": {
+    "IncomiaDataGeneratorPolicy": {
+      "Description": "Lambda 1: Solo puede escribir en DynamoDB, S3 y emitir eventos",
+      "Statement": [
+        {
+          "Sid": "DynamoDBWriteOnly",
+          "Effect": "Allow",
+          "Action": [
+            "dynamodb:PutItem",
+            "dynamodb:BatchWriteItem"
+          ],
+          "Resource": [
+            "arn:aws:dynamodb:us-east-1:ACCOUNT_ID:table/incomia_users",
+            "arn:aws:dynamodb:us-east-1:ACCOUNT_ID:table/incomia_transactions",
+            "arn:aws:dynamodb:us-east-1:ACCOUNT_ID:table/incomia_expenses"
+          ]
+        },
+        {
+          "Sid": "S3WriteOnly",
+          "Effect": "Allow",
+          "Action": [
+            "s3:PutObject"
+          ],
+          "Resource": "arn:aws:s3:::incomia-data-lake/raw/*"
+        },
+        {
+          "Sid": "EventBridgePutEvents",
+          "Effect": "Allow",
+          "Action": "events:PutEvents",
+          "Resource": "arn:aws:events:us-east-1:ACCOUNT_ID:event-bus/incomia-events"
+        },
+        {
+          "Sid": "CloudWatchLogs",
+          "Effect": "Allow",
+          "Action": [
+            "logs:CreateLogGroup",
+            "logs:CreateLogStream",
+            "logs:PutLogEvents"
+          ],
+          "Resource": "arn:aws:logs:us-east-1:ACCOUNT_ID:log-group:/aws/lambda/incomia-data-generator:*"
+        }
+      ]
+    },
+    "IncomiaLiquidityForecastPolicy": {
+      "Description": "Lambda 2: Solo puede leer de DynamoDB y emitir eventos",
+      "Statement": [
+        {
+          "Sid": "DynamoDBReadOnly",
+          "Effect": "Allow",
+          "Action": [
+            "dynamodb:GetItem",
+            "dynamodb:Query",
+            "dynamodb:Scan"
+          ],
+          "Resource": [
+            "arn:aws:dynamodb:us-east-1:ACCOUNT_ID:table/incomia_users",
+            "arn:aws:dynamodb:us-east-1:ACCOUNT_ID:table/incomia_transactions",
+            "arn:aws:dynamodb:us-east-1:ACCOUNT_ID:table/incomia_expenses",
+            "arn:aws:dynamodb:us-east-1:ACCOUNT_ID:table/incomia_transactions/index/*",
+            "arn:aws:dynamodb:us-east-1:ACCOUNT_ID:table/incomia_users/index/*"
+          ]
+        },
+        {
+          "Sid": "EventBridgePutEvents",
+          "Effect": "Allow",
+          "Action": "events:PutEvents",
+          "Resource": "arn:aws:events:us-east-1:ACCOUNT_ID:event-bus/incomia-events"
+        },
+        {
+          "Sid": "CloudWatchLogs",
+          "Effect": "Allow",
+          "Action": [
+            "logs:CreateLogGroup",
+            "logs:CreateLogStream",
+            "logs:PutLogEvents"
+          ],
+          "Resource": "arn:aws:logs:us-east-1:ACCOUNT_ID:log-group:/aws/lambda/incomia-liquidity-forecast:*"
+        }
+      ]
+    },
+    "IncomiaAIAdvisorPolicy": {
+      "Description": "Lambda 3: Puede leer DynamoDB e invocar Bedrock Claude Opus",
+      "Statement": [
+        {
+          "Sid": "DynamoDBReadOnly",
+          "Effect": "Allow",
+          "Action": [
+            "dynamodb:GetItem",
+            "dynamodb:Query",
+            "dynamodb:Scan"
+          ],
+          "Resource": [
+            "arn:aws:dynamodb:us-east-1:ACCOUNT_ID:table/incomia_users",
+            "arn:aws:dynamodb:us-east-1:ACCOUNT_ID:table/incomia_transactions",
+            "arn:aws:dynamodb:us-east-1:ACCOUNT_ID:table/incomia_expenses",
+            "arn:aws:dynamodb:us-east-1:ACCOUNT_ID:table/incomia_transactions/index/*"
+          ]
+        },
+        {
+          "Sid": "BedrockInvokeModel",
+          "Effect": "Allow",
+          "Action": "bedrock:InvokeModel",
+          "Resource": "arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-3-opus-20240229-v1:0"
+        },
+        {
+          "Sid": "CloudWatchLogs",
+          "Effect": "Allow",
+          "Action": [
+            "logs:CreateLogGroup",
+            "logs:CreateLogStream",
+            "logs:PutLogEvents"
+          ],
+          "Resource": "arn:aws:logs:us-east-1:ACCOUNT_ID:log-group:/aws/lambda/incomia-ai-advisor:*"
+        }
+      ]
+    }
+  }
+}
