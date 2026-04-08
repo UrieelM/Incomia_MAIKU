@@ -1,7 +1,7 @@
 """
 Funcion AWS Lambda autocontenida que:
   1. Predice la liquidez a 14 dias (medias moviles).
-  2. Invoca Claude 3 Sonnet via Amazon Bedrock para generar
+  2. Invoca Claude 3 Opus via Amazon Bedrock para generar
      consejos financieros personalizados.
   3. Fallback robusto sin Bedrock para pruebas locales.
 
@@ -10,7 +10,7 @@ Deploy: Empaquetar como Lambda con capa boto3 actualizada.
 Trigger: API Gateway POST /api/v1/advice
 
 Uso local:
-  python entregable_2_lambda_consejos_ia.py
+  python advice_generator.py
 
 Dependencias: numpy, boto3
 Autor: Equipo Incomia
@@ -33,7 +33,7 @@ from botocore.exceptions import ClientError
 AWS_REGION = "us-east-1"
 
 # Amazon Bedrock
-BEDROCK_MODEL_ID = "anthropic.claude-3-sonnet-20240229-v1:0"
+BEDROCK_MODEL_ID = "anthropic.claude-3-opus-20240229-v1:0"
 BEDROCK_MAX_TOKENS = 1024
 BEDROCK_TEMPERATURE = 0.4
 BEDROCK_ANTHROPIC_VERSION = "bedrock-2023-05-31"
@@ -413,7 +413,7 @@ def invoke_bedrock(
     upcoming_expenses: List[Dict[str, Any]],
     model_id: str = BEDROCK_MODEL_ID,
 ) -> Dict[str, Any]:
-    """Invoca Claude 3 Sonnet via Bedrock. Fallback si no hay credenciales."""
+    """Invoca Claude 3 Opus via Bedrock. Fallback si no hay credenciales."""
     user_prompt = build_user_prompt(user, recent_transactions, upcoming_expenses)
 
     request_body = {
@@ -591,6 +591,7 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             "metadata": advice_result["metadata"],
         }, default=str, ensure_ascii=False),
     }
+
 
 
 # ════════════════════════════════════════════════════════════
