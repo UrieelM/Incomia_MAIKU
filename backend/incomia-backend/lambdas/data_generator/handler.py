@@ -620,10 +620,24 @@ def upload_to_dynamodb(data: Dict[str, Any]) -> Dict[str, int]:
     for key, table_name in mapping:
         tbl = ddb.Table(table_name)
         logger.info(f"Subiendo {len(data[key])} {key} a {table_name}...")
+        
+        # Remapeo de llaves para compatibilidad con el esquema de DynamoDB
+        processed_items = []
+        for item in data[key]:
+            new_item = item.copy()
+            if "user_id" in new_item:
+                new_item["userId"] = new_item.pop("user_id")
+            if "transaction_id" in new_item:
+                new_item["transactionId"] = new_item.pop("transaction_id")
+            if "expense_id" in new_item:
+                new_item["alertId"] = new_item.pop("expense_id")
+            processed_items.append(_to_decimal(new_item))
+
         with tbl.batch_writer() as batch:
-            for item in data[key]:
-                batch.put_item(Item=_to_decimal(item))
+            for item in processed_items:
+                batch.put_item(Item=item)
         counts[key] = len(data[key])
+
     logger.info(f"Carga DynamoDB completa: {counts}")
     return counts
 
