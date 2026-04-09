@@ -252,6 +252,8 @@ export interface SavingGoal {
   /** Fecha estimada de cumplimiento calculada por IA */
   estimatedDate: string;
   icon?: string;
+  termMonths?: number;
+  monthlySaving?: number;
 }
 
 /**

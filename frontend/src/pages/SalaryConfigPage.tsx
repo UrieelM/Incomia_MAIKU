@@ -14,10 +14,17 @@ import { cn } from '../utils/cn';
 import { useCurrency } from '../hooks/useCurrency';
 
 export function SalaryConfigPage() {
-  const { salaryConfig, updateSalary, isLoading } = useAppStore();
-  const [amount, setAmount] = useState(salaryConfig?.desiredAmount || 3200);
+  const { salaryConfig, updateSalary, isLoading, stabilityReserveBalance } = useAppStore();
+
+  const [amount, setAmount] = useState(salaryConfig?.desiredAmount ?? 0);
   const [frequency, setFrequency] = useState(salaryConfig?.frequency || 'monthly');
+  const [isSaved, setIsSaved] = useState(false);
   const { format } = useCurrency();
+
+  // Cálculos de inteligencia real
+  const monthsOfCoverage = amount > 0 ? Math.max(0, Math.floor(stabilityReserveBalance / amount)) : 0;
+  const recommendedSafeAmount = stabilityReserveBalance > 0 ? Math.floor(stabilityReserveBalance / 4) : 2500;
+  const confidenceLevel = Math.min(100, Math.max(0, Math.round((stabilityReserveBalance / (amount * 3 || 1)) * 100)));
 
   useEffect(() => {
     if (salaryConfig) {
@@ -27,8 +34,18 @@ export function SalaryConfigPage() {
   }, [salaryConfig]);
 
   const handleUpdate = async () => {
-    await updateSalary({ desiredAmount: amount, frequency });
+    await updateSalary({ 
+      desiredAmount: amount, 
+      frequency,
+      recommendedAmount: recommendedSafeAmount,
+      confidence: confidenceLevel,
+      impact: Math.round((recommendedSafeAmount / (amount || 1)) * 10)
+    });
+    setIsSaved(true);
+    setTimeout(() => setIsSaved(false), 3000);
   };
+
+
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700 italic">
@@ -77,9 +94,10 @@ export function SalaryConfigPage() {
               <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest italic">Monto de Salario Artificial</p>
               <div className="text-right italic">
                 <span className="text-5xl font-display font-bold text-primary dark:text-white italic">{format(amount)}</span>
-                <span className="text-slate-400 text-xs font-bold ml-2 uppercase italic tracking-widest">USD</span>
+                <span className="text-slate-400 text-xs font-bold ml-2 uppercase italic tracking-widest">MXN</span>
               </div>
             </div>
+
             
             <div className="relative pt-6 italic">
               <input 
@@ -99,20 +117,34 @@ export function SalaryConfigPage() {
             </div>
           </div>
 
-          <div className="pt-4 italic">
+          <div className="pt-6 border-t border-slate-100 dark:border-white/5 space-y-6 italic">
+            <div className="flex items-center gap-4 p-6 bg-emerald-50/50 dark:bg-emerald-500/5 rounded-3xl border border-emerald-100/50 dark:border-emerald-500/10 italic">
+              <div className="w-12 h-12 bg-white dark:bg-slate-800 rounded-2xl flex items-center justify-center text-emerald-500 shadow-sm italic">
+                <Sparkles size={24} />
+              </div>
+              <div className="flex-1 italic">
+                <p className="text-xs font-bold text-emerald-900 dark:text-emerald-400 italic">Listo para estabilizar</p>
+                <p className="text-[10px] text-emerald-700/60 dark:text-emerald-400/50 italic leading-tight">Haz clic abajo para confirmar tu nuevo ingreso mensual de {format(amount)}.</p>
+              </div>
+            </div>
+
             <Button 
               variant="emerald" 
-              className="w-full h-16 text-sm font-bold gap-3 shadow-xl shadow-emerald-500/10 dark:shadow-none hover:scale-[1.01] active:scale-[0.99] transition-all italic"
+              className={cn(
+                "w-full h-20 text-lg font-display font-bold gap-4 shadow-2xl transition-all italic rounded-[28px]",
+                isSaved ? "bg-emerald-600 scale-[1.02]" : "shadow-emerald-500/20 hover:scale-[1.01] hover:shadow-emerald-500/30"
+              )}
               onClick={handleUpdate}
               isLoading={isLoading}
             >
-              <Zap size={20} />
-              Activar Protocolo de Estabilización
+              {isSaved ? <CheckCircle2 size={24} /> : <Zap size={24} />}
+              {isSaved ? "¡SALARIO GUARDADO!" : "GUARDAR Y ACTIVAR SUELDO"}
             </Button>
-            <p className="text-center text-[10px] text-slate-400 dark:text-slate-500 mt-4 italic font-medium">
-              Al activar, Incomia comenzará a desviar excedentes a tu reserva automáticamente.
+            <p className="text-center text-[10px] text-slate-400 dark:text-slate-500 italic font-medium">
+              Al confirmar, Incomia recalibrará tu fondo de estabilidad inmediatamente.
             </p>
           </div>
+
         </Card>
 
         {/* Info/Stats Cards */}
@@ -126,16 +158,16 @@ export function SalaryConfigPage() {
               </div>
               
               <div className="h-28 flex items-end gap-2 px-2 italic">
-                {[45, 75, 95, 85, 55, 65, 80].map((h, i) => (
+                {[1, 2, 3, 4, 5, 6, 7].map((i) => (
                   <div 
                     key={i} 
                     className="flex-1 bg-white/5 rounded-t-lg relative group/bar italic"
-                    style={{ height: `${h}%` }}
+                    style={{ height: `${Math.min(100, (monthsOfCoverage / i) * 100)}%` }}
                   >
                     <div 
                       className={cn(
                         "absolute bottom-0 left-0 right-0 bg-emerald-500 rounded-t-lg transition-all duration-1000 delay-300 italic shadow-[0_0_10px_rgba(16,185,129,0.3)]",
-                        i === 2 ? "opacity-100 h-full" : "opacity-0 h-0"
+                        i <= monthsOfCoverage ? "opacity-100 h-full" : "opacity-0 h-0"
                       )}
                     />
                   </div>
@@ -144,9 +176,10 @@ export function SalaryConfigPage() {
 
               <div className="flex justify-between items-end border-t border-white/10 pt-6 italic">
                 <div className="italic">
-                  <p className="text-[10px] text-slate-400 font-bold uppercase italic">Impacto en Liquidez</p>
-                  <p className="text-2xl font-display font-bold text-emerald-400 italic">+{salaryConfig?.impact}%</p>
+                  <p className="text-[10px] text-zinc-400 font-bold uppercase italic tracking-widest">Resiliencia (Meses)</p>
+                  <p className="text-2xl font-display font-bold text-emerald-400 italic">+{monthsOfCoverage} meses</p>
                 </div>
+
                 <div className="text-right italic">
                   <p className="text-[10px] text-slate-400 font-bold uppercase italic">Confianza IA</p>
                   <p className="text-lg font-bold text-white italic">{salaryConfig?.confidence}%</p>
@@ -162,11 +195,11 @@ export function SalaryConfigPage() {
               </div>
               <p className="text-emerald-600 dark:text-emerald-400 text-[10px] font-bold uppercase tracking-[0.2em] mb-4 italic">Monto Seguro Recomendado</p>
               <h4 className="text-4xl font-display font-bold text-emerald-900 dark:text-emerald-400 leading-tight italic">
-                {salaryConfig?.recommendedAmount ? format(salaryConfig.recommendedAmount) : format(2850)}
+                {format(recommendedSafeAmount)}
                 <span className="text-emerald-500/50 text-xl ml-2 italic">/mes</span>
               </h4>
-              <p className="text-emerald-700/60 dark:text-emerald-400/50 text-[10px] mt-4 leading-relaxed font-medium italic">
-                Basado en tu volatilidad histórica de los últimos 6 meses y proyecciones de mercado.
+              <p className="text-[10px] text-emerald-700/80 dark:text-emerald-400/80 leading-relaxed italic">
+                Tu configuración actual prioriza la estabilidad. Con este nivel de reserva, Incomia puede garantizar tu flujo de caja incluso ante caídas del 40% en tus depósitos brutos durante los próximos 6 meses.
               </p>
             </div>
           </div>

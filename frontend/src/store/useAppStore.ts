@@ -18,7 +18,17 @@ import type {
   LogExpenseResponse,
 } from '../types';
 import { financialService } from '../services/financialService';
-import { mockAppSettings, mockSavingGoals, mockExpenses } from '../mocks/financialData';
+import { 
+  mockAppSettings, 
+  mockFinancialSummary, 
+  mockFinancialAdvice, 
+  mockLiquidityPredictions,
+  mockSavingGoals
+} from '../mocks/financialData';
+
+
+
+
 import {
   signIn as cognitoSignIn,
   signUp as cognitoSignUp,
@@ -60,6 +70,26 @@ interface AppState {
   advice: FinancialAdvice[];
   predictions: LiquidityPrediction[];
   settings: AppSettings;
+  
+  // ─ Simulación Local (Cojinete/Cushion) ─────────────────────────────────────
+  totalIncome: number;
+  totalExpenses: number;
+  iaMemory: LogIncomeRequest[];
+  showReward: boolean;
+
+  // ─ Simulación Temporal (Historial Mensual) ─────────────────────────────────
+  simulationOffset: number;
+  monthlyHistory: Record<string, {
+    incomes: LogIncomeRequest[];
+    expenses: Expense[];
+    salaryDesired: number;
+    totalIncome: number;
+    totalExpenses: number;
+  }>;
+  stabilityReserveBalance: number;
+  simulationError: string | null;
+
+
 
   // ─ IA ─────────────────────────────────────────────────────────────────────
   forecast: ForecastResponse | null;
@@ -105,7 +135,16 @@ interface AppState {
   updateSettings: (settings: Partial<AppSettings>) => void;
   setTheme: (theme: 'light' | 'dark') => void;
   setUser: (user: User | null) => void;
+  addSavingGoal: (goal: SavingGoal) => void;
+  setShowReward: (show: boolean) => void;
+  resetData: () => void;
+  advanceMonth: () => void;
+  regressMonth: () => void;
+  clearSimulationError: () => void;
 }
+
+
+
 
 // ── Store ─────────────────────────────────────────────────────────────────────
 
@@ -119,19 +158,41 @@ export const useAppStore = create<AppState>()(
       isAuthLoading: true,
       authError: null,
 
-      summary: null,
-      salaryConfig: null,
+      summary: mockFinancialSummary,
+      salaryConfig: {
+
+        desiredAmount: 0,
+        frequency: 'monthly',
+        recommendedAmount: 0,
+        confidence: 100,
+        impact: 0
+      },
       savingGoals: mockSavingGoals,
+
       cashFlowHistory: [],
-      expenses: mockExpenses,
-      advice: [],
-      predictions: [],
+      expenses: [],
+      advice: mockFinancialAdvice,
+      predictions: mockLiquidityPredictions,
       settings: mockAppSettings,
+
 
       forecast: null,
       aiAdvice: null,
       isLoadingForecast: false,
       isLoadingAIAdvice: false,
+
+      totalIncome: 0,
+      totalExpenses: 0,
+      iaMemory: [],
+      showReward: false,
+
+      simulationOffset: 0,
+      monthlyHistory: {},
+      stabilityReserveBalance: 0,
+      simulationError: null,
+
+
+
 
       isLoading: false,
       error: null,
@@ -273,8 +334,14 @@ export const useAppStore = create<AppState>()(
        * Mapea respuestas del backend a los tipos de la UI.
        */
       fetchDashboardData: async () => {
-        const { userId } = get();
+        const { userId, simulationOffset } = get();
         if (!userId) return;
+
+        // Si estamos en simulación histórica, no sobrescribimos con mocks
+        if (simulationOffset !== 0) {
+          set({ isLoading: false });
+          return;
+        }
 
         set({ isLoading: true, error: null });
         try {
@@ -285,10 +352,9 @@ export const useAppStore = create<AppState>()(
               financialService.getFinancialAdvice(userId),
               financialService.getPredictions(userId),
               financialService.getCashFlowData(userId),
-              financialService.getTransactions(userId), // Reusamos transacciones como base para gastos por ahora
+              financialService.getTransactions(userId),
             ]);
 
-          // Filtramos solo los de tipo 'expense' para la pestaña de gastos
           const expenseList = expenses
             .filter(tx => tx.amount < 0 || tx.type === 'expense')
             .map(tx => ({
@@ -296,13 +362,17 @@ export const useAppStore = create<AppState>()(
               category: tx.category,
               concept: tx.source,
               amount: Math.abs(tx.amount),
-              date: tx.date,
-              type: 'fixed' as const, // Placeholder
+              type: 'fixed' as const,
             }));
+
+          const currentConfig = get().salaryConfig;
+          const finalConfig = (currentConfig?.desiredAmount && currentConfig.desiredAmount > 0) 
+            ? currentConfig 
+            : (salaryConfig || currentConfig);
 
           set({ 
             summary, 
-            salaryConfig, 
+            salaryConfig: finalConfig, 
             advice, 
             predictions, 
             cashFlowHistory, 
@@ -310,10 +380,12 @@ export const useAppStore = create<AppState>()(
             isLoading: false 
           });
 
+
         } catch (err: any) {
           set({ error: err.message || 'Error al cargar datos', isLoading: false });
         }
       },
+
 
       /**
        * updateSalary: actualiza la configuración salarial.
@@ -340,7 +412,32 @@ export const useAppStore = create<AppState>()(
 
         const result = await financialService.logIncome(userId, data);
 
+        set((state) => {
+          const currentMonthKey = new Date(new Date().getFullYear(), new Date().getMonth() + state.simulationOffset, 1).toISOString().slice(0, 7);
+          const history = { ...state.monthlyHistory };
+          if (!history[currentMonthKey]) {
+            history[currentMonthKey] = { incomes: [], expenses: [], salaryDesired: state.salaryConfig?.desiredAmount || 0, totalIncome: 0, totalExpenses: 0 };
+          }
+          history[currentMonthKey].incomes.push(data);
+          history[currentMonthKey].totalIncome += data.amount;
+
+          return {
+            totalIncome: state.totalIncome + data.amount,
+            iaMemory: [...state.iaMemory, data],
+            monthlyHistory: history
+          };
+        });
+
+
+        // Lógica de Recompensa: Si ingreso > (sueldo deseado + 5000) y colchón > 10000
+        const currentSalary = get().salaryConfig?.desiredAmount || 0;
+        const cushion = get().totalIncome - get().totalExpenses;
+        if (data.amount > currentSalary + 5000 && cushion > 10000) {
+          set({ showReward: true });
+        }
+
         // Actualizar salaryConfig en el store con el nuevo simulated_salary
+
         const current = get().salaryConfig;
         if (current) {
           set({
@@ -362,8 +459,45 @@ export const useAppStore = create<AppState>()(
         const { userId } = get();
         if (!userId) throw new Error('No autenticado');
 
-        return financialService.logExpense(userId, data);
+        const result = await financialService.logExpense(userId, data);
+        
+        set((state) => {
+          const currentMonthKey = new Date(new Date().getFullYear(), new Date().getMonth() + state.simulationOffset, 1).toISOString().slice(0, 7);
+          const history = { ...state.monthlyHistory };
+          if (!history[currentMonthKey]) {
+            history[currentMonthKey] = { incomes: [], expenses: [], salaryDesired: state.salaryConfig?.desiredAmount || 0, totalIncome: 0, totalExpenses: 0 };
+          }
+          history[currentMonthKey].expenses.push({
+            id: result.transaction_id,
+            category: result.category_label || 'Otros',
+            concept: data.merchant || data.notes || 'Gasto manual',
+            amount: data.amount,
+            type: 'variable'
+          });
+
+          history[currentMonthKey].totalExpenses += data.amount;
+
+          return {
+            totalExpenses: state.totalExpenses + data.amount,
+            expenses: [
+              {
+                id: result.transaction_id,
+                category: result.category_label || 'Otros',
+                concept: data.merchant || data.notes || 'Gasto manual',
+                amount: data.amount,
+                date: data.date,
+                type: 'variable'
+              },
+              ...state.expenses
+            ],
+            monthlyHistory: history
+          };
+        });
+
+        return result;
       },
+
+
 
       /**
        * fetchForecast: obtiene el pronóstico de liquidez a 14 días.
@@ -417,16 +551,176 @@ export const useAppStore = create<AppState>()(
       },
 
       setUser: (user) => set({ user }),
+
+      addSavingGoal: (goal) => {
+        set((state) => ({
+          savingGoals: [goal, ...state.savingGoals]
+        }));
+      },
+
+      setShowReward: (show) => set({ showReward: show }),
+
+      resetData: () => {
+        set({
+          totalIncome: 0,
+          totalExpenses: 0,
+          iaMemory: [],
+          expenses: [],
+          savingGoals: [],
+          salaryConfig: {
+            desiredAmount: 0,
+            frequency: 'monthly',
+            recommendedAmount: 0,
+            confidence: 100,
+            impact: 0
+          },
+          summary: {
+            nextIncome: { amount: 0, date: 'Pendiente', description: 'Registra datos' },
+            stabilityReserve: { current: 0, target: 0, progress: 0, message: 'Vacío' },
+            recentTransactions: []
+          },
+          showReward: false,
+          simulationOffset: 0,
+          monthlyHistory: {},
+          stabilityReserveBalance: 0,
+          simulationError: null,
+          cashFlowHistory: []
+        });
+        console.log("Incomia: Estado reiniciado a 0 (Secret Reset)");
+      },
+
+      advanceMonth: () => {
+        const { totalIncome, stabilityReserveBalance, salaryConfig, simulationOffset, monthlyHistory } = get();
+        
+        // Límite de 12 meses (0 a 11)
+        if (simulationOffset >= 11) {
+          return;
+        }
+
+        const desired = salaryConfig?.desiredAmount || 0;
+        const available = totalIncome + stabilityReserveBalance;
+
+        if (available < desired && desired > 0) {
+          set({ simulationError: `Atención: Fondos insuficientes para cubrir tu sueldo deseado de ${desired} MXN. La simulación continuará permitiendo un balance negativo en tu colchón.` });
+          // No retornamos, permitimos avanzar (no-bloqueante)
+        }
+
+
+        const currentMonthKey = new Date(new Date().getFullYear(), new Date().getMonth() + simulationOffset, 1).toISOString().slice(0, 7);
+        const currentRecord = monthlyHistory[currentMonthKey] || { incomes: [], expenses: [], salaryDesired: desired, totalIncome: 0, totalExpenses: 0 };
+        
+        const surplus = totalIncome - desired;
+        const newBalance = stabilityReserveBalance + surplus;
+        const monthLabel = new Date(new Date().getFullYear(), new Date().getMonth() + simulationOffset, 1)
+          .toLocaleDateString('es-ES', { month: 'short' }).toUpperCase();
+
+        set((state) => ({
+          simulationOffset: state.simulationOffset + 1,
+          stabilityReserveBalance: newBalance,
+          totalIncome: 0,
+          totalExpenses: 0,
+          iaMemory: [],
+          expenses: [],
+          cashFlowHistory: [...state.cashFlowHistory, { month: monthLabel, real: totalIncome, stabilized: desired }],
+          summary: {
+            ...state.summary!,
+            stabilityReserve: {
+              ...state.summary!.stabilityReserve,
+              current: newBalance,
+              message: newBalance > stabilityReserveBalance 
+                ? "¡Excelente! Has fortalecido tu colchón este mes." 
+                : "Se ha utilizado parte de la reserva para estabilizar tu sueldo deseado."
+            },
+
+            nextIncome: {
+              ...state.summary!.nextIncome,
+              amount: desired
+            },
+            recentTransactions: []
+          },
+          monthlyHistory: {
+            ...state.monthlyHistory,
+            [currentMonthKey]: {
+              ...currentRecord,
+              totalIncome,
+              salaryDesired: desired,
+              incomes: state.iaMemory,
+              expenses: state.expenses
+            }
+          }
+        }));
+      },
+
+      regressMonth: () => {
+        const { simulationOffset } = get();
+        if (simulationOffset <= 0) return;
+
+        set((state) => {
+          const newOffset = state.simulationOffset - 1;
+
+          const monthKey = new Date(new Date().getFullYear(), new Date().getMonth() + newOffset, 1).toISOString().slice(0, 7);
+          const history = state.monthlyHistory[monthKey];
+
+          if (history) {
+            return {
+              simulationOffset: newOffset,
+              totalIncome: history.totalIncome,
+              totalExpenses: history.totalExpenses,
+              expenses: history.expenses,
+              iaMemory: history.incomes,
+              summary: {
+                ...state.summary!,
+                stabilityReserve: {
+                  ...state.summary!.stabilityReserve,
+                  current: state.stabilityReserveBalance
+                },
+                nextIncome: {
+                  ...state.summary!.nextIncome,
+                  amount: history.salaryDesired
+                },
+                recentTransactions: history.incomes.map((inc, i) => ({
+                  id: `sim-inc-hist-${i}`,
+                  date: inc.date,
+                  source: inc.merchant || 'Depósito',
+                  category: 'Income',
+                  amount: inc.amount,
+                  status: 'processed',
+                  type: 'income' as const
+                }))
+
+              }
+            };
+          }
+
+          return { simulationOffset: newOffset };
+        });
+      },
+
+      clearSimulationError: () => set({ simulationError: null }),
     }),
+
     {
       name: 'incomia-storage',
-      // Solo persistir settings y userId — la data financiera se recarga siempre
       partialize: (state) => ({
         settings: state.settings,
         userId: state.userId,
         user: state.user,
         isAuthenticated: state.isAuthenticated,
+        totalIncome: state.totalIncome,
+        totalExpenses: state.totalExpenses,
+        iaMemory: state.iaMemory,
+        salaryConfig: state.salaryConfig,
+        savingGoals: state.savingGoals,
+        expenses: state.expenses,
+        summary: state.summary,
+        monthlyHistory: state.monthlyHistory,
+        stabilityReserveBalance: state.stabilityReserveBalance,
+        cashFlowHistory: state.cashFlowHistory,
+        simulationOffset: state.simulationOffset
       }),
     }
+
   )
 );
+
+

@@ -134,10 +134,19 @@ export function AIAdvisorPage() {
     fetchForecast, 
     fetchAIAdvice, 
     isLoadingForecast, 
-    isLoadingAIAdvice 
+    isLoadingAIAdvice,
+    totalIncome,
+    totalExpenses,
+    salaryConfig
   } = useAppStore();
 
   const [activeTab, setActiveTab] = useState<'advice' | 'forecast'>('advice');
+
+  // Lógica de Colchón Local
+  const cushion = totalIncome - totalExpenses;
+  const desiredSalary = salaryConfig?.desiredAmount || 3200;
+  const monthsOfSurvival = desiredSalary > 0 ? Number((cushion / desiredSalary).toFixed(1)) : 0;
+
 
   // Carga inicial automática
   useEffect(() => {
@@ -195,32 +204,46 @@ export function AIAdvisorPage() {
       </div>
 
       {/* ── Risk summary cards ─────────────────────────────────────────────── */}
-      {forecast ? (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <SummaryCard
+          label="Colchón de Estabilidad"
+          value={formatMXN(cushion)}
+          sub="Disponible para meses bajos"
+          valueClass="text-emerald-600 dark:text-emerald-400"
+        />
+        <SummaryCard
+          label="Meses de Supervivencia"
+          value={`${monthsOfSurvival} meses`}
+          sub={`Basado en sueldo de ${formatMXN(desiredSalary)}`}
+          valueClass={monthsOfSurvival < 3 ? 'text-amber-500' : 'text-emerald-500'}
+        />
+        <SummaryCard
+          label="Sueldo Regularizado"
+          value={formatMXN(desiredSalary)}
+          sub="Monto fijo mensual"
+        />
+        <SummaryCard
+          label="Estado de Calificación"
+          value={monthsOfSurvival >= 3 ? 'Resiliente' : 'En Construcción'}
+          valueClass={monthsOfSurvival >= 3 ? 'text-emerald-600' : 'text-slate-400'}
+        />
+      </div>
+
+      {/* ── Forecast summary cards (Solo si hay forecast) ────────────────── */}
+      {forecast && (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 opacity-70">
           <SummaryCard
-            label="Riesgo financiero"
+            label="Riesgo (Predicción)"
             value={<RiskBadge level={forecast.risk_level} label={forecast.risk_label} />}
           />
           <SummaryCard
             label="Prob. de quiebra"
             value={`${forecast.bankruptcy_probability.toFixed(1)}%`}
-            valueClass={forecast.bankruptcy_probability > 60 ? 'text-red-600' : 'text-emerald-600 dark:text-emerald-400'}
-          />
-          <SummaryCard
-            label="Saldo mínimo proyectado"
-            value={formatMXN(forecast.min_projected_balance)}
-            sub={`Día ${forecast.min_balance_on_day}`}
-            valueClass={forecast.min_projected_balance < 0 ? 'text-red-600' : undefined}
-          />
-          <SummaryCard
-            label="Saldo final (14 días)"
-            value={formatMXN(forecast.final_balance)}
-            sub={forecast.model_used === 'prophet' ? 'Modelo Prophet' : 'Media Móvil'}
+            valueClass={forecast.bankruptcy_probability > 60 ? 'text-red-600' : 'text-emerald-600'}
           />
         </div>
-      ) : (
-        <SkeletonCards />
       )}
+
 
       {/* ── Alerta de liquidez ─────────────────────────────────────────────── */}
       {forecast?.trigger_alert && (
@@ -405,20 +428,8 @@ function SummaryCard({
   );
 }
 
-function SkeletonCards() {
-  return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-      {[1, 2, 3, 4].map((i) => (
-        <div key={i} className="bg-white dark:bg-primary rounded-2xl border border-slate-100 dark:border-primary-light p-4 h-20 animate-pulse">
-          <div className="h-3 bg-slate-100 dark:bg-white/10 rounded w-3/4 mb-2" />
-          <div className="h-5 bg-slate-100 dark:bg-white/10 rounded w-1/2" />
-        </div>
-      ))}
-    </div>
-  );
-}
-
 function AdviceLoading() {
+
   return (
     <div className="space-y-3 animate-pulse">
       <div className="flex items-center gap-3 mb-5">
