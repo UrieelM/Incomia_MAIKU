@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthLayout } from './layouts/AuthLayout';
 import { MainLayout } from './layouts/MainLayout';
@@ -10,9 +11,18 @@ import { SavingsPage } from './pages/SavingsPage';
 import { CashFlowPage } from './pages/CashFlowPage';
 import { ExpensesPage } from './pages/ExpensesPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { AIAdvisorPage } from './pages/AIAdvisorPage';
 import { ProtectedRoute } from './components/shared/ProtectedRoute';
+import { useAppStore } from './store/useAppStore';
 
 function App() {
+  const initAuth = useAppStore((s) => s.initAuth);
+
+  // Verifica si hay una sesión activa de Cognito al arrancar la app
+  useEffect(() => {
+    initAuth();
+  }, [initAuth]);
+
   return (
     <BrowserRouter>
       <Routes>
@@ -32,6 +42,7 @@ function App() {
             <Route path="/expenses" element={<ExpensesPage />} />
             <Route path="/savings" element={<SavingsPage />} />
             <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/ai" element={<AIAdvisorPage />} />
           </Route>
         </Route>
         

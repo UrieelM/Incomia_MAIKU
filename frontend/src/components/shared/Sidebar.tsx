@@ -1,27 +1,28 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  Settings2, 
-  ArrowUpRight, 
-  History, 
-  PieChart, 
-  LifeBuoy, 
+import {
+  LayoutDashboard,
+  Settings2,
+  ArrowUpRight,
+  History,
+  PieChart,
+  LifeBuoy,
   LogOut,
   Sparkles,
   Receipt,
-  Settings
+  Settings,
+  Brain
 } from 'lucide-react';
 import { cn } from '../../utils/cn';
-import { Button } from '../ui/Button';
 import { useAppStore } from '../../store/useAppStore';
 
 const menuItems = [
-  { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard', path: '/' },
-  { id: 'salary', icon: Settings2, label: 'Salary Config', path: '/salary' },
-  { id: 'cashflow', icon: ArrowUpRight, label: 'Cash Flow', path: '/cashflow' },
-  { id: 'deposits', icon: History, label: 'Deposits', path: '/deposits' },
-  { id: 'expenses', icon: Receipt, label: 'Expenses', path: '/expenses' },
-  { id: 'savings', icon: PieChart, label: 'Savings', path: '/savings' },
+  { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard',    path: '/' },
+  { id: 'salary',    icon: Settings2,       label: 'Salary Config', path: '/salary' },
+  { id: 'cashflow',  icon: ArrowUpRight,    label: 'Cash Flow',     path: '/cashflow' },
+  { id: 'deposits',  icon: History,         label: 'Deposits',      path: '/deposits' },
+  { id: 'expenses',  icon: Receipt,         label: 'Expenses',      path: '/expenses' },
+  { id: 'savings',   icon: PieChart,        label: 'Savings',       path: '/savings' },
+  { id: 'ai',        icon: Brain,           label: 'Asesor IA',     path: '/ai' },
 ];
 
 export function Sidebar() {
@@ -66,13 +67,18 @@ export function Sidebar() {
       </div>
 
       <div className="mt-auto p-8 space-y-4">
-        <Button 
-          variant="emerald" 
-          className="w-full gap-2 text-sm shadow-emerald-100 dark:shadow-none h-10"
+        <NavLink
+          to="/ai"
+          className={({ isActive }) => cn(
+            'flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors',
+            isActive
+              ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-100 dark:shadow-none'
+              : 'bg-emerald-500 text-white hover:bg-emerald-600 shadow-lg shadow-emerald-100 dark:shadow-none'
+          )}
         >
           <Sparkles size={16} />
           AI Insight
-        </Button>
+        </NavLink>
 
         <div className="space-y-1 pt-4 border-t border-slate-50 dark:border-white/5">
           <NavLink 

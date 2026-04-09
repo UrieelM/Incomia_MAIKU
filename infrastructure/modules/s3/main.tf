@@ -41,3 +41,14 @@ resource "aws_s3_bucket_versioning" "data_lake" {
   bucket = aws_s3_bucket.data_lake.id
   versioning_configuration { status = "Enabled" }
 }
+
+# 3. BUCKET DE RESULTADOS ATHENA -> Guarda los resultados de las consultas SQL
+resource "aws_s3_bucket" "athena_results" {
+  bucket = "${var.project_name}-athena-results-${var.env}"
+
+  tags = {
+    Project     = var.project_name
+    Environment = var.env
+  }
+}
+
