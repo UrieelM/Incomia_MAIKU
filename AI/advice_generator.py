@@ -48,12 +48,11 @@ if not logger.handlers:
     logger.addHandler(_h)
 
 AWS_REGION = os.environ.get("AWS_REGION", "us-east-1")
-BEDROCK_MODEL_ID = os.environ.get("BEDROCK_MODEL_ID", "anthropic.claude-3-opus-20240229-v1:0")
+BEDROCK_MODEL_ID = os.environ.get("BEDROCK_MODEL_ID", "anthropic.claude-3-sonnet-20260229-v1:0")
 BEDROCK_MAX_TOKENS = int(os.environ.get("BEDROCK_MAX_TOKENS", "1024"))
 BEDROCK_TEMPERATURE = float(os.environ.get("BEDROCK_TEMPERATURE", "0.4"))
 BEDROCK_TIMEOUT = int(os.environ.get("BEDROCK_TIMEOUT_SECONDS", "8"))
-BEDROCK_ANTHROPIC_VERSION = "bedrock-2023-05-31"
-
+BEDROCK_ANTHROPIC_VERSION = "bedrock-2026-05-31"
 
 DYNAMODB_TABLE_USERS = os.environ.get("DYNAMODB_TABLE_USERS", "incomia_users")
 DYNAMODB_TABLE_TRANSACTIONS = os.environ.get("DYNAMODB_TABLE_TRANSACTIONS", "incomia_transactions")
@@ -63,7 +62,6 @@ EVENTBRIDGE_BUS = os.environ.get("EVENTBRIDGE_BUS_NAME", "incomia-events")
 # Circuit Breaker config
 CB_FAILURE_THRESHOLD = int(os.environ.get("CB_FAILURE_THRESHOLD", "3"))
 CB_RECOVERY_TIMEOUT = int(os.environ.get("CB_RECOVERY_TIMEOUT_SECONDS", "60"))
-
 
 # ════════════════════════════════════════════════════════════
 # CIRCUIT BREAKER PATTERN
@@ -252,6 +250,7 @@ def build_user_prompt(
 
 ## Pronostico de Liquidez (14 dias)
 {fc_text}
+
 
 ## Contexto
 - Fecha: {today.strftime('%d de %B de %Y')}
