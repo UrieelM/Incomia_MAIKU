@@ -1,7 +1,7 @@
 """
 Lambda 3: Asesor Financiero IA — Incomia (Equipo HAIKU)
 =======================================================
-Microservicio que invoca Amazon Bedrock (Claude 3 Opus) para generar
+Microservicio que invoca Amazon Bedrock (Claude Sonnet 4.6) para generar
 consejos financieros personalizados para trabajadores gig en Mexico 2026.
 
 Arquitectura:
@@ -48,7 +48,8 @@ if not logger.handlers:
     logger.addHandler(_h)
 
 AWS_REGION = os.environ.get("AWS_REGION", "us-east-1")
-BEDROCK_MODEL_ID = os.environ.get("BEDROCK_MODEL_ID", "anthropic.claude-3-sonnet-20260229-v1:0")
+BEDROCK_MODEL_ID = os.environ.get("BEDROCK_MODEL_ID", "anthropic.claude-4-6-sonnet-v1:0")
+
 BEDROCK_MAX_TOKENS = int(os.environ.get("BEDROCK_MAX_TOKENS", "1024"))
 BEDROCK_TEMPERATURE = float(os.environ.get("BEDROCK_TEMPERATURE", "0.4"))
 BEDROCK_TIMEOUT = int(os.environ.get("BEDROCK_TIMEOUT_SECONDS", "8"))
@@ -270,7 +271,7 @@ def invoke_bedrock(
     upcoming_expenses: List[Dict[str, Any]],
     forecast: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
-    """Invoca Claude 3 Opus via Bedrock con Circuit Breaker."""
+    """Invoca Claude Sonnet 4.6 via Bedrock con Circuit Breaker."""
     user_prompt = build_user_prompt(user, recent_transactions, upcoming_expenses, forecast)
 
     # Verificar circuit breaker
@@ -330,7 +331,7 @@ def invoke_bedrock(
             "statusCode": 200,
             "advice": advice,
             "metadata": {
-                "source": "bedrock_claude_opus",
+                "source": "bedrock_claude_sonnet_4.6",
                 "model_id": BEDROCK_MODEL_ID,
                 "user_id": user.get("user_id"),
                 "input_tokens": resp_body.get("usage", {}).get("input_tokens"),

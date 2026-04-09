@@ -81,7 +81,7 @@
       ]
     },
     "IncomiaAIAdvisorPolicy": {
-      "Description": "Lambda 3: Puede leer DynamoDB e invocar Bedrock Claude Opus",
+      "Description": "Lambda 3: Puede leer DynamoDB e invocar Bedrock Claude Sonnet 4.6",
       "Statement": [
         {
           "Sid": "DynamoDBReadOnly",
@@ -102,7 +102,7 @@
           "Sid": "BedrockInvokeModel",
           "Effect": "Allow",
           "Action": "bedrock:InvokeModel",
-          "Resource": "arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-3-opus-20240229-v1:0"
+          "Resource": "arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-4-6-sonnet-v1:0"
         },
         {
           "Sid": "CloudWatchLogs",
