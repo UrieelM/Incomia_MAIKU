@@ -40,9 +40,44 @@ const quickAddCategories = [
 ];
 
 export function ExpensesPage() {
-  const { expenses, salaryConfig } = useAppStore();
+  const { expenses, salaryConfig, logExpense, stabilityReserveBalance } = useAppStore();
+
   const { format } = useCurrency();
   const [activeTab, setActiveTab] = useState('mensual');
+  const [isAdding, setIsAdding] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+
+  // Form state
+  const [newConcept, setNewConcept] = useState('');
+  const [newAmount, setNewAmount] = useState('');
+  const [newCategory, setNewCategory] = useState('Suscripciones');
+
+
+  // Helper para añadir gasto rápido
+  const handleAddExpense = async () => {
+    if (!newAmount || isNaN(Number(newAmount))) return;
+    setIsAdding(true);
+    try {
+      await logExpense({
+        amount: Number(newAmount),
+        merchant: newConcept || `Gasto: ${newCategory}`,
+        date: new Date().toISOString().split('T')[0],
+      });
+      setShowModal(false);
+      setNewAmount('');
+      setNewConcept('');
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsAdding(false);
+    }
+  };
+
+  const handleQuickAdd = (category: string) => {
+    setNewCategory(category);
+    setShowModal(true);
+  };
+
 
   const totalMonthly = expenses.reduce((acc, curr) => acc + curr.amount, 0);
   const salaryLimit = salaryConfig?.desiredAmount || 3400;
@@ -102,22 +137,22 @@ export function ExpensesPage() {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-4 italic">
-                 <div className="p-6 bg-red-50 dark:bg-red-500/10 rounded-2xl italic">
-                    <p className="text-[10px] text-red-400 font-bold uppercase tracking-widest mb-1 italic">Eficiencia</p>
-                    <p className="text-xl font-display font-bold text-red-600 dark:text-red-400 italic">-12.9%</p>
-                 </div>
-                 <div className="p-6 bg-slate-50 dark:bg-white/5 rounded-2xl italic">
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1 italic">Gastos Fijos</p>
-                    <p className="text-xl font-display font-bold text-primary dark:text-white italic">62.5%</p>
-                 </div>
-                 <div className="p-6 bg-emerald-50 dark:bg-emerald-500/10 rounded-2xl italic">
-                    <p className="text-[10px] text-emerald-600 dark:emerald-400 font-bold uppercase tracking-widest mb-1 italic">Proyección</p>
-                    <p className="text-xl font-display font-bold text-emerald-700 dark:text-emerald-500 italic">
-                      {format(46080)}
-                      <span className="text-[10px] ml-1 opacity-60">/año</span>
-                    </p>
-                 </div>
-              </div>
+                  <div className="p-6 bg-emerald-50 dark:bg-emerald-500/10 rounded-2xl italic">
+                     <p className="text-[10px] text-emerald-600 dark:emerald-400 font-bold uppercase tracking-widest mb-1 italic">Tasa de Estabilidad</p>
+                     <p className="text-xl font-display font-bold text-emerald-600 dark:text-emerald-400 italic">94.2%</p>
+                  </div>
+                  <div className="p-6 bg-slate-50 dark:bg-white/5 rounded-2xl italic">
+                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1 italic">Gastos Fijos</p>
+                     <p className="text-xl font-display font-bold text-primary dark:text-white italic">62.5%</p>
+                  </div>
+                  <div className="p-6 bg-emerald-50 dark:bg-emerald-500/10 rounded-2xl italic">
+                     <p className="text-[10px] text-emerald-600 dark:emerald-400 font-bold uppercase tracking-widest mb-1 italic">Resiliencia IA</p>
+                     <p className="text-xl font-display font-bold text-emerald-700 dark:text-emerald-500 italic">
+                       {Math.round(stabilityReserveBalance / (totalMonthly / 30 || 1))}
+                       <span className="text-[10px] ml-1 opacity-60"> días</span>
+                     </p>
+                  </div>
+               </div>
            </div>
         </Card>
 
@@ -181,7 +216,12 @@ export function ExpensesPage() {
 
          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 italic">
             {quickAddCategories.map((cat, i) => (
-              <button key={i} className="p-6 bg-white dark:bg-white/5 border border-slate-100 dark:border-white/10 rounded-[32px] flex flex-col items-center gap-4 hover:premium-hover premium-transition group italic">
+              <button 
+                key={i} 
+                onClick={() => handleQuickAdd(cat.label)}
+                disabled={isAdding}
+                className="p-6 bg-white dark:bg-white/5 border border-slate-100 dark:border-white/10 rounded-[32px] flex flex-col items-center gap-4 hover:premium-hover premium-transition group italic disabled:opacity-50"
+              >
                  <div className="w-12 h-12 bg-slate-50 dark:bg-white/5 rounded-2xl flex items-center justify-center text-slate-400 dark:text-slate-500 group-hover:bg-primary dark:group-hover:bg-emerald-500 group-hover:text-white transition-colors italic">
                     <cat.icon size={24} />
                  </div>
@@ -190,6 +230,7 @@ export function ExpensesPage() {
             ))}
          </div>
       </div>
+
 
       {/* Expenses Table */}
       <div className="space-y-6 pt-4 italic">
@@ -265,7 +306,70 @@ export function ExpensesPage() {
          </Card>
       </div>
 
+      {/* New Expense Modal */}
+      {showModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 italic">
+          <div className="absolute inset-0 bg-primary/80 backdrop-blur-sm italic" onClick={() => setShowModal(false)} />
+          <Card className="relative z-10 w-full max-w-lg p-10 space-y-8 animate-in zoom-in-95 duration-300 italic">
+            <div className="italic">
+              <h3 className="text-2xl font-display font-bold text-primary dark:text-white italic">Registrar Gasto</h3>
+              <p className="text-slate-500 text-sm mt-1 italic">Ingresa los detalles para que la IA lo clasifique.</p>
+            </div>
+
+            <div className="space-y-6 italic">
+              <div className="space-y-2 italic">
+                <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest italic">Categoría</label>
+                <select 
+                  value={newCategory}
+                  onChange={(e) => setNewCategory(e.target.value)}
+                  className="w-full h-12 bg-slate-50 dark:bg-white/5 border-none rounded-xl px-4 text-sm font-bold text-primary dark:text-white focus:ring-2 focus:ring-emerald-100 dark:focus:ring-emerald-500/20 italic outline-none"
+                >
+                  {quickAddCategories.map(cat => (
+                    <option key={cat.label} value={cat.label} className="dark:bg-slate-900">{cat.label}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-2 italic">
+                <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest italic">Concepto</label>
+                <input 
+                  type="text"
+                  placeholder="Ej. Netflix, Renta, etc."
+                  value={newConcept}
+                  onChange={(e) => setNewConcept(e.target.value)}
+                  className="w-full h-12 bg-slate-50 dark:bg-white/5 border-none rounded-xl px-4 text-sm font-bold text-primary dark:text-white focus:ring-2 focus:ring-emerald-100 dark:focus:ring-emerald-500/20 italic outline-none"
+                />
+              </div>
+
+              <div className="space-y-2 italic">
+                <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest italic">Monto</label>
+                <input 
+                  type="number"
+                  placeholder="0.00"
+                  value={newAmount}
+                  onChange={(e) => setNewAmount(e.target.value)}
+                  className="w-full h-12 bg-slate-50 dark:bg-white/5 border-none rounded-xl px-4 text-3xl font-display font-bold text-primary dark:text-white focus:ring-2 focus:ring-emerald-100 dark:focus:ring-emerald-500/20 italic outline-none"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-4 pt-4 italic">
+              <Button variant="outline" className="flex-1 h-14 italic" onClick={() => setShowModal(false)}>Cancelar</Button>
+              <Button 
+                variant="emerald" 
+                className="flex-1 h-14 italic" 
+                onClick={handleAddExpense}
+                isLoading={isAdding}
+              >
+                Guardar Gasto
+              </Button>
+            </div>
+          </Card>
+        </div>
+      )}
+
       {/* Floating Action CTA */}
+
       <div className="fixed bottom-8 right-8 z-50 italic">
          <Button variant="emerald" className="h-14 pl-6 pr-8 rounded-full shadow-2xl dark:shadow-none gap-3 animate-bounce italic">
             <Zap size={20} className="fill-emerald-400 text-emerald-400 italic" />

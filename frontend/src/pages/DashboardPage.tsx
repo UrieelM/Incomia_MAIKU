@@ -5,7 +5,8 @@ import {
   ArrowRight,
   TrendingUp,
   CreditCard,
-  Briefcase
+  Briefcase,
+  Sparkles
 } from 'lucide-react';
 import { useAppStore } from '../store/useAppStore';
 import { Card } from '../components/ui/Card';
@@ -23,14 +24,29 @@ export function DashboardPage() {
     advice, 
     predictions, 
     fetchDashboardData, 
-    isLoading 
+    isLoading,
+    totalIncome,
+    totalExpenses,
+    salaryConfig,
+    showReward,
+    setShowReward,
+    stabilityReserveBalance,
+    simulationError,
+    clearSimulationError
   } = useAppStore();
+
+
+  const cushion = stabilityReserveBalance + (totalIncome - totalExpenses);
+  const reserveTarget = (salaryConfig?.desiredAmount || 3200) * 3;
+  const reserveProgress = reserveTarget > 0 ? Math.min(100, Math.round((cushion / reserveTarget) * 100)) : 0;
+
   
   const { format } = useCurrency();
 
   useEffect(() => {
     fetchDashboardData();
   }, [fetchDashboardData]);
+
 
   if (isLoading || !summary) {
     return (
@@ -39,6 +55,12 @@ export function DashboardPage() {
       </div>
     );
   }
+
+  const nextIncomeAmount = salaryConfig?.desiredAmount !== undefined && salaryConfig.desiredAmount > 0 
+    ? salaryConfig.desiredAmount 
+    : summary.nextIncome.amount;
+
+
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700 italic">
@@ -58,9 +80,10 @@ export function DashboardPage() {
               <p className="text-slate-400 text-[10px] uppercase tracking-widest font-bold italic">Tu Próximo Salario Artificial</p>
             </div>
             
-            <h3 className="text-5xl font-display font-bold mb-8 italic">{format(summary.nextIncome.amount)}</h3>
+            <h3 className="text-5xl font-display font-bold mb-8 italic">{format(nextIncomeAmount)}</h3>
             
             <div className="flex flex-col md:flex-row gap-6 italic">
+
               <div className="flex items-center gap-3 bg-white/10 w-fit px-5 py-3 rounded-2xl backdrop-blur-sm italic">
                 <Calendar size={20} className="text-emerald-400 italic" />
                 <div className="italic">
@@ -88,9 +111,10 @@ export function DashboardPage() {
         <Card className="lg:col-span-12 xl:col-span-7 flex flex-col justify-between p-10 italic border-slate-100 dark:border-white/5">
           <div className="flex justify-between items-start mb-10 italic">
             <div className="italic">
-              <p className="text-slate-400 text-[10px] uppercase tracking-widest font-bold mb-1 italic">Fondo de Estabilización (Reserva)</p>
-              <h3 className="text-5xl font-display font-bold text-primary dark:text-white italic">{format(summary.stabilityReserve.current)}</h3>
+              <p className="text-slate-400 text-[10px] uppercase tracking-widest font-bold mb-1 italic">Fondo de Estabilización (Colchón)</p>
+              <h3 className="text-5xl font-display font-bold text-primary dark:text-white italic">{format(cushion)}</h3>
             </div>
+
             <div className="w-16 h-16 bg-emerald-50 dark:bg-emerald-500/20 rounded-[24px] flex items-center justify-center text-emerald-500 italic">
               <ShieldCheck size={32} />
             </div>
@@ -106,9 +130,10 @@ export function DashboardPage() {
               <div className="h-4 bg-slate-100 dark:bg-white/10 rounded-full overflow-hidden italic">
                 <div 
                   className="h-full bg-emerald-500 rounded-full transition-all duration-1000 ease-out italic"
-                  style={{ width: `${summary.stabilityReserve.progress}%` }}
+                  style={{ width: `${reserveProgress}%` }}
                 />
               </div>
+
             </div>
 
             <Card className="bg-slate-50 dark:bg-white/5 border-none p-5 italic">
@@ -181,6 +206,58 @@ export function DashboardPage() {
           </Button>
         </div>
       </div>
+      {/* Simulation Error Popup */}
+      {simulationError && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-6 italic">
+          <div className="absolute inset-0 bg-red-900/40 backdrop-blur-md italic" onClick={() => clearSimulationError()} />
+          <Card className="relative z-10 w-full max-w-sm p-10 text-center space-y-6 animate-in zoom-in duration-300 border-red-500/30 dark:bg-slate-900 italic">
+            <div className="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4 italic">
+              <ShieldCheck size={40} className="text-red-500 italic" />
+            </div>
+            <div className="italic">
+              <h3 className="text-2xl font-display font-bold text-primary dark:text-white italic leading-tight">¡Alerta de Liquidez!</h3>
+              <p className="text-slate-400 text-sm mt-4 italic leading-relaxed">
+                {simulationError}
+              </p>
+            </div>
+            <div className="pt-4 italic">
+              <Button variant="emerald" className="w-full h-14 text-sm font-bold shadow-xl italic" onClick={() => clearSimulationError()}>
+                Entendido
+              </Button>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* Reward Popup */}
+
+      {showReward && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 italic">
+          <div className="absolute inset-0 bg-primary/90 backdrop-blur-md italic" onClick={() => setShowReward(false)} />
+          <Card className="relative z-10 w-full max-w-lg p-12 text-center space-y-8 animate-in zoom-in duration-300 border-emerald-500/30 italic">
+            <div className="w-24 h-24 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-6 italic">
+              <Sparkles size={48} className="text-emerald-500 animate-pulse italic" />
+            </div>
+            <div className="italic">
+              <h3 className="text-4xl font-display font-bold text-primary dark:text-white italic leading-tight">¡Te mereces <br /> <span className="text-emerald-500 italic">un premio!</span></h3>
+              <p className="text-slate-400 text-sm mt-4 italic leading-relaxed">
+                Tus ingresos han superado con creces tu sueldo deseado y tu colchón de seguridad es robusto. Has trabajado duro para tener esta paz financiera. 
+                <br /><br />
+                <span className="text-white font-bold italic">Es momento de darte un pequeño regalo. ✨</span>
+              </p>
+            </div>
+            <div className="pt-4 flex flex-col gap-4 italic">
+              <Button variant="emerald" className="h-16 text-sm font-bold shadow-xl italic" onClick={() => setShowReward(false)}>
+                ¡Lo celebraré!
+              </Button>
+              <Button variant="ghost" className="text-slate-500 text-xs italic" onClick={() => setShowReward(false)}>
+                Quizás después
+              </Button>
+            </div>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }
+

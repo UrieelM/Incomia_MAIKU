@@ -1,4 +1,6 @@
-import { Plus, Target, Flame, Bike, Car, Sparkles } from 'lucide-react';
+import { useState } from 'react';
+import { Plus, Target, Flame, Bike, Car, Sparkles, Clock, DollarSign } from 'lucide-react';
+
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { useAppStore } from '../store/useAppStore';
@@ -6,8 +8,40 @@ import { useCurrency } from '../hooks/useCurrency';
 import { cn } from '../utils/cn';
 
 export function SavingsPage() {
-  const { savingGoals, settings, updateSettings } = useAppStore();
+  const { savingGoals, settings, updateSettings, addSavingGoal } = useAppStore();
   const { format } = useCurrency();
+  const [showModal, setShowModal] = useState(false);
+
+  // Form state
+  const [title, setTitle] = useState('');
+  const [targetAmount, setTargetAmount] = useState('');
+  const [termMonths, setTermMonths] = useState('12');
+  const [priority, setPriority] = useState<'low' | 'medium' | 'high'>('medium');
+
+  const handleAddGoal = () => {
+    if (!title || !targetAmount || isNaN(Number(targetAmount))) return;
+
+    const total = Number(targetAmount);
+    const months = Number(termMonths);
+    const monthly = Math.round(total / months);
+
+    addSavingGoal({
+      id: `goal-${Date.now()}`,
+      title,
+      targetAmount: total,
+      currentAmount: 0,
+      priority,
+      termMonths: months,
+      monthlySaving: monthly,
+      estimatedDate: new Date(Date.now() + months * 30 * 24 * 60 * 60 * 1000).toLocaleDateString('es-MX', { month: 'short', year: 'numeric' }),
+    });
+
+    setShowModal(false);
+    setTitle('');
+    setTargetAmount('');
+    setTermMonths('12');
+  };
+
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -35,10 +69,14 @@ export function SavingsPage() {
             Incomia AI ha optimizado tu flujo de caja este mes, incrementando tu capacidad de ahorro en un 12%.
           </p>
         </div>
-        <Button className="gap-2 h-12 px-8 flex-shrink-0">
+        <Button 
+          onClick={() => setShowModal(true)}
+          className="gap-2 h-12 px-8 flex-shrink-0"
+        >
           <Plus size={18} />
           Crear Nuevo Objetivo
         </Button>
+
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -90,7 +128,8 @@ export function SavingsPage() {
         {/* Goals Grid */}
         <div className="lg:col-span-8 space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {savingGoals.slice(0, 2).map((goal) => (
+            {savingGoals.map((goal) => (
+
               <Card key={goal.id} className="p-8 group hover:premium-hover premium-transition">
                 <div className="flex justify-between items-start mb-6">
                   <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center", getPriorityColor(goal.priority))}>
@@ -170,7 +209,103 @@ export function SavingsPage() {
         </div>
       </div>
 
+      {/* New Goal Modal */}
+      {showModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 italic">
+          <div className="absolute inset-0 bg-primary/80 backdrop-blur-sm italic" onClick={() => setShowModal(false)} />
+          <Card className="relative z-10 w-full max-w-lg p-10 space-y-8 animate-in zoom-in-95 duration-300 italic">
+            <div className="italic">
+              <h3 className="text-2xl font-display font-bold text-primary dark:text-white italic">Nuevo Objetivo de Ahorro</h3>
+              <p className="text-slate-500 text-sm mt-1 italic">Define tu meta y deja que Incomia AI la financie por ti.</p>
+            </div>
+
+            <div className="space-y-6 italic">
+              <div className="space-y-2 italic">
+                <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest italic">Concepto</label>
+                <input 
+                  type="text"
+                  placeholder="Ej. Fondo de Emergencia, Vacaciones..."
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  className="w-full h-12 bg-slate-50 dark:bg-white/5 border-none rounded-xl px-4 text-sm font-bold text-primary dark:text-white focus:ring-2 focus:ring-emerald-100 dark:focus:ring-emerald-500/20 italic outline-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-6 italic">
+                <div className="space-y-2 italic">
+                  <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest italic">Monto Total</label>
+                  <div className="relative italic">
+                    <input 
+                      type="number"
+                      placeholder="0.00"
+                      value={targetAmount}
+                      onChange={(e) => setTargetAmount(e.target.value)}
+                      className="w-full h-12 bg-slate-50 dark:bg-white/5 border-none rounded-xl pl-10 pr-4 text-sm font-bold text-primary dark:text-white focus:ring-2 focus:ring-emerald-100 dark:focus:ring-emerald-500/20 italic outline-none"
+                    />
+                    <DollarSign size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 italic" />
+                  </div>
+                </div>
+
+                <div className="space-y-2 italic">
+                  <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest italic">Plazo (Meses)</label>
+                  <div className="relative italic">
+                    <input 
+                      type="number"
+                      placeholder="12"
+                      value={termMonths}
+                      onChange={(e) => setTermMonths(e.target.value)}
+                      className="w-full h-12 bg-slate-50 dark:bg-white/5 border-none rounded-xl pl-10 pr-4 text-sm font-bold text-primary dark:text-white focus:ring-2 focus:ring-emerald-100 dark:focus:ring-emerald-500/20 italic outline-none"
+                    />
+                    <Clock size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 italic" />
+                  </div>
+                </div>
+              </div>
+
+              {targetAmount && termMonths && Number(termMonths) > 0 && (
+                <div className="p-4 bg-emerald-50 dark:bg-emerald-500/10 rounded-2xl border border-emerald-100 dark:border-emerald-500/20 italic">
+                  <p className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-1 italic">Ahorro Mensual Requerido</p>
+                  <p className="text-2xl font-display font-bold text-primary dark:text-emerald-400">
+                    {format(Number(targetAmount) / Number(termMonths))}
+                    <span className="text-xs font-medium text-slate-400 ml-2 italic">/ mes</span>
+                  </p>
+                </div>
+              )}
+
+              <div className="space-y-2 italic">
+                <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest italic">Prioridad</label>
+                <div className="flex gap-2 italic">
+                  {['low', 'medium', 'high'].map((p) => (
+                    <button
+                      key={p}
+                      onClick={() => setPriority(p as any)}
+                      className={cn(
+                        "flex-1 h-10 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all italic",
+                        priority === p ? "bg-primary text-white" : "bg-slate-50 dark:bg-white/5 text-slate-400"
+                      )}
+                    >
+                      {p === 'low' ? 'Baja' : p === 'medium' ? 'Media' : 'Alta'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-4 pt-4 italic">
+              <Button variant="outline" className="flex-1 h-14 italic" onClick={() => setShowModal(false)}>Cancelar</Button>
+              <Button 
+                variant="emerald" 
+                className="flex-1 h-14 italic" 
+                onClick={handleAddGoal}
+              >
+                Activar Meta
+              </Button>
+            </div>
+          </Card>
+        </div>
+      )}
+
       {/* Quote Section */}
+
       <div className="py-20 text-center space-y-8 italic">
          <div className="w-px h-16 bg-slate-200 mx-auto" />
          <h2 className="text-5xl font-display font-bold text-primary max-w-3xl mx-auto leading-tight italic">

@@ -36,6 +36,7 @@ resource "aws_cognito_user_pool_client" "frontend" {
   # - Refresh_Token: Mantener la sesión activa rotando tokens detrás dev telón.
   explicit_auth_flows = [
     "ALLOW_USER_PASSWORD_AUTH",
-    "ALLOW_REFRESH_TOKEN_AUTH"
+    "ALLOW_REFRESH_TOKEN_AUTH",
+    "ALLOW_USER_SRP_AUTH"
   ]
 }

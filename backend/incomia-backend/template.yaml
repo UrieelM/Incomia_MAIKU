@@ -1,0 +1,112 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  incomia-backend
+  Referencia de código fuente Lambda de Incomia.
+
+  IMPORTANTE: Este archivo ya NO despliega infraestructura AWS.
+  Todos los recursos (Lambda, DynamoDB, API Gateway, EventBridge, SSM)
+  son ahora gestionados por Terraform en el directorio /infrastructure.
+
+  Este archivo se mantiene únicamente como referencia de la estructura
+  de handlers y para desarrollo/testing local con SAM CLI (sam local invoke).
+
+  Para desplegar en AWS, usa:
+    cd ../infrastructure
+    terraform init
+    terraform apply
+
+# ════════════════════════════════════════════
+# CONFIGURACIÓN GLOBAL (para pruebas locales)
+# ════════════════════════════════════════════
+Globals:
+  Function:
+    Runtime: python3.11
+    Timeout: 30
+    MemorySize: 256
+    Environment:
+      Variables:
+        USERS_TABLE: "incomia-users-dev"
+        TRANSACTIONS_TABLE: "incomia-transactions-dev"
+        ALERTS_TABLE: "incomia-alerts-dev"
+        BEDROCK_MODEL_ID: "amazon.nova-lite-v1:0"
+        AWS_REGION_NAME: "us-east-1"
+    Layers:
+      - !Ref SharedLayer
+
+Resources:
+
+  # ════════════════════════════════════════════
+  # LAYER COMPARTIDA — solo para pruebas locales
+  # En producción: gestionado por Terraform (modules/lambda)
+  # ════════════════════════════════════════════
+  SharedLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: incomia-shared-local
+      Description: Módulos compartidos de DynamoDB y Bedrock (solo testing local)
+      ContentUri: shared/
+      CompatibleRuntimes:
+        - python3.11
+
+  # ════════════════════════════════════════════
+  # LAMBDA 1: create_user — POST /users
+  # En producción: gestionado por Terraform (modules/lambda)
+  # ════════════════════════════════════════════
+  CreateUserFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: incomia-create-user-local
+      CodeUri: lambdas/create_user/
+      Handler: handler.lambda_handler
+
+  # ════════════════════════════════════════════
+  # LAMBDA 2: log_income — POST /users/{userId}/income
+  # ════════════════════════════════════════════
+  LogIncomeFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: incomia-log-income-local
+      CodeUri: lambdas/log_income/
+      Handler: handler.lambda_handler
+
+  # ════════════════════════════════════════════
+  # LAMBDA 3: log_expense — POST /users/{userId}/expense
+  # ════════════════════════════════════════════
+  LogExpenseFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: incomia-log-expense-local
+      CodeUri: lambdas/log_expense/
+      Handler: handler.lambda_handler
+
+  # ════════════════════════════════════════════
+  # LAMBDA 4: get_dashboard — GET /users/{userId}/dashboard
+  # ════════════════════════════════════════════
+  GetDashboardFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: incomia-get-dashboard-local
+      CodeUri: lambdas/get_dashboard/
+      Handler: handler.lambda_handler
+
+  # ════════════════════════════════════════════
+  # LAMBDA 5: analyze_expenses — POST /users/{userId}/analyze
+  # ════════════════════════════════════════════
+  AnalyzeExpensesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: incomia-analyze-expenses-local
+      CodeUri: lambdas/analyze_expenses/
+      Handler: handler.lambda_handler
+      Timeout: 60
+
+  # ════════════════════════════════════════════
+  # LAMBDA 6: inflation_alert — GET /users/{userId}/inflation
+  # ════════════════════════════════════════════
+  InflationAlertFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: incomia-inflation-alert-local
+      CodeUri: lambdas/inflation_alert/
+      Handler: handler.lambda_handler

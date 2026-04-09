@@ -20,9 +20,31 @@ import { cn } from '../utils/cn';
 import { useCurrency } from '../hooks/useCurrency';
 
 export function DataTrainingPage() {
-  const { summary } = useAppStore();
+  const { summary, logIncome, iaMemory } = useAppStore();
   const [isUploading, setIsUploading] = useState(false);
   const { format } = useCurrency();
+
+  // Estado para entrada manual
+  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [amount, setAmount] = useState('');
+  const [source, setSource] = useState('Stripe Payments');
+
+  const handleManualAdd = async () => {
+    if (!amount || isNaN(Number(amount))) return;
+    try {
+      await logIncome({
+        amount: Number(amount),
+        date,
+        source,
+        merchant: source,
+        notes: 'Registro manual quirúrgico'
+      });
+      setAmount('');
+    } catch (error) {
+      console.error('Failed to add income', error);
+    }
+  };
+
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -93,18 +115,40 @@ export function DataTrainingPage() {
             </h4>
             <Card className="p-8 italic border-slate-100 dark:border-white/5">
               <div className="grid grid-cols-1 sm:grid-cols-4 gap-6 items-end italic">
-                <Input label="Fecha Factura" type="date" className="h-12 bg-slate-50 dark:bg-white/5 border-none italic" />
-                <Input label="Monto" placeholder="0.00" className="h-12 bg-slate-50 dark:bg-white/5 border-none italic" />
+                <Input 
+                  label="Fecha Factura" 
+                  type="date" 
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                  className="h-12 bg-slate-50 dark:bg-white/5 border-none italic" 
+                />
+                <Input 
+                  label="Monto" 
+                  placeholder="0.00" 
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  className="h-12 bg-slate-50 dark:bg-white/5 border-none italic" 
+                />
                 <div className="space-y-2 italic">
                   <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest italic">Proveedor / Origen</label>
-                  <select className="w-full h-12 bg-slate-50 dark:bg-white/5 border-none rounded-xl px-4 text-sm font-bold text-primary dark:text-white focus:ring-2 focus:ring-emerald-100 dark:focus:ring-emerald-500/20 italic outline-none">
+                  <select 
+                    value={source}
+                    onChange={(e) => setSource(e.target.value)}
+                    className="w-full h-12 bg-slate-50 dark:bg-white/5 border-none rounded-xl px-4 text-sm font-bold text-primary dark:text-white focus:ring-2 focus:ring-emerald-100 dark:focus:ring-emerald-500/20 italic outline-none"
+                  >
                     <option className="dark:bg-slate-900">Stripe Payments</option>
                     <option className="dark:bg-slate-900">PayPal Freelance</option>
                     <option className="dark:bg-slate-900">Transferencia Directa</option>
                     <option className="dark:bg-slate-900">Efectivo / Otros</option>
                   </select>
                 </div>
-                <Button className="h-12 shadow-lg dark:shadow-none italic">Añadir Registro</Button>
+                <Button 
+                  onClick={handleManualAdd}
+                  className="h-12 shadow-lg dark:shadow-none italic"
+                >
+                  Añadir Registro
+                </Button>
+
               </div>
             </Card>
           </div>
@@ -136,7 +180,30 @@ export function DataTrainingPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50 dark:divide-white/5 italic">
-                  {summary?.recentTransactions.map((tx) => (
+                  {iaMemory.map((tx, idx) => (
+                    <tr key={idx} className="hover:bg-slate-50/30 dark:hover:bg-white/5 transition-colors group italic">
+                      <td className="px-8 py-6 text-sm font-medium text-slate-500 italic">{tx.date}</td>
+                      <td className="px-8 py-6 italic">
+                        <div className="flex items-center gap-4 italic">
+                          <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-white/5 flex items-center justify-center text-slate-400 group-hover:bg-white dark:group-hover:bg-white/10 transition-colors italic">
+                            <FileSpreadsheet size={18} />
+                          </div>
+                          <span className="text-sm font-bold text-primary dark:text-white italic">{tx.source}</span>
+                        </div>
+                      </td>
+                      <td className="px-8 py-6 text-sm font-bold text-primary dark:text-white italic text-right">{format(tx.amount)}</td>
+                      <td className="px-8 py-6 italic">
+                        <div className="flex items-center justify-center gap-2 italic">
+                          <div className="flex items-center gap-2 bg-emerald-50 dark:bg-emerald-500/20 px-3 py-1 rounded-full italic">
+                            <CheckCircle2 size={12} className="text-emerald-500 italic" />
+                            <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase italic">Memoria IA</span>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  {summary?.recentTransactions.filter(tx => tx.type === 'income').map((tx) => (
+
                     <tr key={tx.id} className="hover:bg-slate-50/30 dark:hover:bg-white/5 transition-colors group italic">
                       <td className="px-8 py-6 text-sm font-medium text-slate-500 italic">{tx.date}</td>
                       <td className="px-8 py-6 italic">
@@ -177,21 +244,23 @@ export function DataTrainingPage() {
             <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500 rounded-full opacity-20 blur-2xl -mr-10 -mt-10 italic" />
             <div className="relative z-10 space-y-8 italic">
               <div className="italic">
-                <p className="text-slate-400 text-[10px] uppercase tracking-widest font-bold mb-2 italic">Estado de Calificación IA</p>
+                <p className="text-slate-400 text-[10px] uppercase tracking-widest font-bold mb-2 italic">Estado de Entrenamiento IA</p>
                 <div className="flex items-end gap-3 italic">
-                  <span className="text-6xl font-display font-bold italic tracking-tight">1,284</span>
+                  <span className="text-6xl font-display font-bold italic tracking-tight">{iaMemory.length * 12 + 84}</span>
                   <div className="flex flex-col mb-2 italic">
-                    <span className="text-[10px] font-bold text-emerald-400 uppercase italic">Data Points</span>
-                    <span className="text-[8px] text-zinc-400 dark:text-slate-500 uppercase italic">Processed</span>
+                    <span className="text-[10px] font-bold text-emerald-400 uppercase italic">Vectores Procesados</span>
+                    <span className="text-[8px] text-zinc-400 dark:text-slate-500 uppercase italic">Modelo Local</span>
                   </div>
                 </div>
               </div>
 
+
               <div className="space-y-3 italic">
-                 <div className="flex justify-between items-end italic">
-                   <span className="text-xs font-bold text-slate-300 italic uppercase">Precisión del Algoritmo</span>
-                   <span className="text-2xl font-display font-bold text-emerald-400 italic">84%</span>
-                 </div>
+                  <div className="p-6 bg-emerald-50 dark:bg-emerald-500/10 rounded-2xl italic">
+                     <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-widest mb-1 italic">Tasa de Estabilidad</p>
+                     <p className="text-xl font-display font-bold text-emerald-600 dark:text-emerald-400 italic">94.2%</p>
+                  </div>
+
                  <div className="h-3 bg-white/10 rounded-full overflow-hidden italic">
                    <div className="h-full bg-emerald-500 w-[84%] rounded-full shadow-[0_0_15px_rgba(16,185,129,0.5)] italic" />
                  </div>

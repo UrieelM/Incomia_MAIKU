@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Banco | SuperNet</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+</head>
+<body>
+    <!-- Top-most red bar (auth/header) -->
+    <header class="global-header">
+        <div class="header-container">
+            <div class="logo-area">
+                <ion-icon name="flame"></ion-icon>
+                <span class="brand-name">Banco</span>
+            </div>
+            
+            <div class="header-tools">
+                <div class="user-greeting">
+                    <span>Bienvenido, <strong>Juan P.</strong></span>
+                    <span class="last-login">Último acceso: 08/Abr/2026 14:22</span>
+                </div>
+                <button class="icon-action"><ion-icon name="mail-outline"></ion-icon></button>
+                <button class="icon-action"><ion-icon name="settings-outline"></ion-icon></button>
+                <button class="btn-logout">Cerrar sesión</button>
+                
+                <!-- INCOMIA Plugin Extension -->
+                <button class="plugin-incomia">
+                    INCOMIA
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Secondary navigation -->
+    <nav class="main-nav">
+        <div class="nav-container">
+            <a href="#" class="nav-link active">Posición Global</a>
+            <a href="#" class="nav-link">Cuentas</a>
+            <a href="#" class="nav-link">Tarjetas</a>
+            <a href="#" class="nav-link">Transferencias y Pagos</a>
+            <a href="#" class="nav-link">Inversiones</a>
+            <a href="#" class="nav-link">Ofertas para ti</a>
+        </div>
+    </nav>
+
+    <!-- Main Dashboard Area -->
+    <main class="dashboard-wrapper">
+        <div class="dashboard-grid">
+            <!-- Left Column: Products -->
+            <div class="products-column">
+                <section class="product-group">
+                    <div class="group-header">
+                        <h2>Cuentas</h2>
+                        <span class="total-group-balance">$ 124,500.00 MXN</span>
+                    </div>
+                    
+                    <div class="product-card">
+                        <div class="product-info">
+                            <h3 class="product-name">Súper Cuenta Nómina</h3>
+                            <span class="product-number">**** **** **** 1234</span>
+                        </div>
+                        <div class="product-balance">
+                            <span class="balance-amount">$ 110,250.00</span>
+                            <span class="balance-label">Saldo disponible</span>
+                        </div>
+                        <div class="product-actions">
+                            <a href="#">Movimientos</a> | <a href="#">Transferir</a>
+                        </div>
+                    </div>
+
+                    <div class="product-card">
+                        <div class="product-info">
+                            <h3 class="product-name">Cuenta Ahorro Inversión</h3>
+                            <span class="product-number">**** **** **** 5678</span>
+                        </div>
+                        <div class="product-balance">
+                            <span class="balance-amount">$ 14,250.00</span>
+                            <span class="balance-label">Saldo disponible</span>
+                        </div>
+                        <div class="product-actions">
+                            <a href="#">Movimientos</a> | <a href="#">Abonar</a>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="product-group">
+                    <div class="group-header">
+                        <h2>Tarjetas de Crédito</h2>
+                    </div>
+                    
+                    <div class="product-card credit-card">
+                        <div class="product-info">
+                            <h3 class="product-name">Tarjeta Crédito LikeU</h3>
+                            <span class="product-number">**** **** **** 9012</span>
+                        </div>
+                        <div class="product-balance">
+                            <span class="balance-label">Límite de crédito: $ 50,000.00</span>
+                            <span class="balance-amount negative">$ 8,450.50</span>
+                            <span class="balance-label">Saldo dispuesto</span>
+                        </div>
+                        <div class="product-actions">
+                            <a href="#">Pagar tarjeta</a> | <a href="#">Estado de cuenta</a>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Right Column: Shortcuts & Promos -->
+            <div class="side-column">
+                <div class="widget">
+                    <h3>Atajos Rápidos</h3>
+                    <ul class="shortcut-list">
+                        <li><ion-icon name="swap-horizontal-outline"></ion-icon> <a href="#">Transferir a terceros</a></li>
+                        <li><ion-icon name="barcode-outline"></ion-icon> <a href="#">Pago de servicios</a></li>
+                        <li><ion-icon name="phone-portrait-outline"></ion-icon> <a href="#">Recarga de celular</a></li>
+                        <li><ion-icon name="document-text-outline"></ion-icon> <a href="#">Constancia de intereses</a></li>
+                    </ul>
+                </div>
+                
+                <div class="promo-widget">
+                    <div class="promo-content">
+                        <h4>Aprovecha tu Pre-Autorizado</h4>
+                        <p>Tienes un crédito personal de hasta <strong>$150,000 MXN</strong> a tasa preferencial.</p>
+                        <button class="btn-promo">Ver oferta</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

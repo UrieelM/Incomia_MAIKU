@@ -1,0 +1,365 @@
+:root {
+    --bg-color: #f4f6f9;
+    --banco-red: #ec0000;
+    --banco-dark-red: #cc0000;
+    --text-dark: #333333;
+    --text-medium: #666666;
+    --text-light: #999999;
+    --border-color: #e0e0e0;
+    --white: #ffffff;
+    --font-family: 'Roboto', Arial, sans-serif;
+
+    /* INCOMIA Plugin Theme */
+    --incomia-g1: #f480f6;
+    --incomia-g2: #bdb255;
+    --incomia-glow: rgba(155, 81, 224, 0.4);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: var(--font-family);
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-dark);
+}
+
+/* Global Header - mimicking the corporate red header */
+.global-header {
+    background-color: var(--banco-red);
+    color: var(--white);
+    padding: 12px 0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    position: relative;
+    z-index: 100;
+}
+
+.header-container {
+    max-width: 1140px;
+    margin: 0 auto;
+    padding: 0 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo-area {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 26px;
+    font-weight: 700;
+}
+
+.brand-name {
+    letter-spacing: -0.5px;
+}
+
+.header-tools {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.user-greeting {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    font-size: 13px;
+    color: #f9f9f9;
+}
+
+.last-login {
+    font-size: 11px;
+    opacity: 0.8;
+}
+
+.icon-action {
+    background: transparent;
+    border: none;
+    color: var(--white);
+    font-size: 22px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.icon-action:hover {
+    opacity: 0.8;
+}
+
+.btn-logout {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.4);
+    color: var(--white);
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-logout:hover {
+    background: rgba(255,255,255,0.1);
+}
+
+/* Plugin Button INCOMIA */
+.plugin-incomia {
+    background: linear-gradient(135deg, var(--incomia-g1), var(--incomia-g2));
+    border: 1px solid rgba(255,255,255,0.5);
+    color: var(--white);
+    padding: 8px 18px;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    box-shadow: 0 2px 10px var(--incomia-glow);
+    transition: transform 0.2s;
+    animation: plugin-pulse 2s infinite;
+}
+
+.plugin-incomia:hover {
+    transform: translateY(-1px) scale(1.02);
+}
+
+@keyframes plugin-pulse {
+    0% { box-shadow: 0 0 0 0 rgba(155, 81, 224, 0.4); }
+    70% { box-shadow: 0 0 0 8px rgba(155, 81, 224, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(155, 81, 224, 0); }
+}
+
+/* Main Navigation Bar */
+.main-nav {
+    background-color: var(--white);
+    border-bottom: 1px solid var(--border-color);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+}
+
+.nav-container {
+    max-width: 1140px;
+    margin: 0 auto;
+    padding: 0 20px;
+    display: flex;
+    gap: 32px;
+}
+
+.nav-link {
+    text-decoration: none;
+    color: var(--text-dark);
+    font-weight: 500;
+    font-size: 14px;
+    padding: 16px 0;
+    border-bottom: 3px solid transparent;
+    transition: color 0.2s, border-color 0.2s;
+}
+
+.nav-link:hover {
+    color: var(--banco-red);
+}
+
+.nav-link.active {
+    color: var(--banco-red);
+    border-bottom: 3px solid var(--banco-red);
+}
+
+/* Dashboard Area */
+.dashboard-wrapper {
+    max-width: 1140px;
+    margin: 30px auto;
+    padding: 0 20px;
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 2.2fr 1fr;
+    gap: 30px;
+}
+
+/* Products Column */
+.product-group {
+    margin-bottom: 30px;
+}
+
+.group-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    border-bottom: 2px solid var(--banco-red);
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+}
+
+.group-header h2 {
+    font-size: 20px;
+    font-weight: 400;
+    color: var(--text-dark);
+}
+
+.total-group-balance {
+    font-weight: 700;
+    font-size: 18px;
+    color: var(--banco-red);
+}
+
+.product-card {
+    background: var(--white);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    transition: box-shadow 0.2s, border-color 0.2s;
+}
+
+.product-card:hover {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+    border-color: #d0d0d0;
+}
+
+.product-info {
+    flex: 1;
+}
+
+.product-name {
+    font-size: 16px;
+    font-weight: 500;
+    margin-bottom: 4px;
+    color: var(--text-dark);
+}
+
+.product-number {
+    font-size: 13px;
+    color: var(--text-medium);
+}
+
+.product-balance {
+    flex: 1;
+    text-align: right;
+    display: flex;
+    flex-direction: column;
+}
+
+.balance-amount {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text-dark);
+}
+
+.balance-amount.negative {
+    color: var(--banco-red);
+}
+
+.balance-label {
+    font-size: 12px;
+    color: var(--text-medium);
+}
+
+.product-actions {
+    flex: 0.8;
+    text-align: right;
+    font-size: 13px;
+}
+
+.product-actions a {
+    color: #0066cc;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.product-actions a:hover {
+    text-decoration: underline;
+}
+
+/* Side Column */
+.widget {
+    background: var(--white);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 20px;
+    margin-bottom: 30px;
+}
+
+.widget h3 {
+    font-size: 16px;
+    margin-bottom: 15px;
+    color: var(--text-dark);
+    font-weight: 500;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 10px;
+}
+
+.shortcut-list {
+    list-style: none;
+}
+
+.shortcut-list li {
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.shortcut-list ion-icon {
+    color: var(--banco-red);
+    font-size: 18px;
+}
+
+.shortcut-list a {
+    color: #0066cc;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.shortcut-list a:hover {
+    text-decoration: underline;
+}
+
+.promo-widget {
+    background: linear-gradient(135deg, var(--banco-red), var(--banco-dark-red));
+    border-radius: 4px;
+    color: var(--white);
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+}
+
+.promo-content {
+    position: relative;
+    z-index: 2;
+}
+
+.promo-content h4 {
+    font-size: 18px;
+    margin-bottom: 10px;
+}
+
+.promo-content p {
+    font-size: 14px;
+    margin-bottom: 15px;
+    opacity: 0.9;
+}
+
+.btn-promo {
+    background: var(--white);
+    color: var(--banco-red);
+    border: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-promo:hover {
+    background: #f0f0f0;
+}

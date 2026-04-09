@@ -21,8 +21,21 @@ import { Button } from '../components/ui/Button';
 import { cn } from '../utils/cn';
 
 export function CashFlowPage() {
-  const { cashFlowHistory } = useAppStore();
+  const { salaryConfig, totalIncome } = useAppStore();
   const { format } = useCurrency();
+
+  const desiredSalary = salaryConfig?.desiredAmount || 3200;
+
+  // Simulación de Volatilidad vs Estabilización
+  const cashFlowHistory = [
+    { month: 'ENE', real: 4500, stabilized: desiredSalary },
+    { month: 'FEB', real: 2800, stabilized: desiredSalary },
+    { month: 'MAR', real: 5200, stabilized: desiredSalary },
+    { month: 'ABR', real: 1900, stabilized: desiredSalary },
+    { month: 'MAY', real: 6100, stabilized: desiredSalary },
+    { month: 'JUN', real: totalIncome > 10000 ? totalIncome / 2 : 3500, stabilized: desiredSalary },
+  ];
+
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
@@ -38,16 +51,15 @@ export function CashFlowPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-8">
           <div className="text-right">
-            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Saldo Estabilizado</p>
-            <p className="text-3xl font-display font-bold text-primary dark:text-white">{format(4250)}</p>
+            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Sueldo Estabilizado</p>
+            <p className="text-3xl font-display font-bold text-primary dark:text-white">{format(desiredSalary)}</p>
           </div>
           <div className="text-right">
             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Puntuación Salud</p>
             <p className="text-3xl font-display font-bold text-emerald-500">94/100</p>
           </div>
-        </div>
+
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
