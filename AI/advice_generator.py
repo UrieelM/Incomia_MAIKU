@@ -54,6 +54,7 @@ BEDROCK_TEMPERATURE = float(os.environ.get("BEDROCK_TEMPERATURE", "0.4"))
 BEDROCK_TIMEOUT = int(os.environ.get("BEDROCK_TIMEOUT_SECONDS", "8"))
 BEDROCK_ANTHROPIC_VERSION = "bedrock-2023-05-31"
 
+
 DYNAMODB_TABLE_USERS = os.environ.get("DYNAMODB_TABLE_USERS", "incomia_users")
 DYNAMODB_TABLE_TRANSACTIONS = os.environ.get("DYNAMODB_TABLE_TRANSACTIONS", "incomia_transactions")
 DYNAMODB_TABLE_EXPENSES = os.environ.get("DYNAMODB_TABLE_EXPENSES", "incomia_expenses")
