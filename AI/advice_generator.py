@@ -63,7 +63,6 @@ EVENTBRIDGE_BUS = os.environ.get("EVENTBRIDGE_BUS_NAME", "incomia-events")
 CB_FAILURE_THRESHOLD = int(os.environ.get("CB_FAILURE_THRESHOLD", "3"))
 CB_RECOVERY_TIMEOUT = int(os.environ.get("CB_RECOVERY_TIMEOUT_SECONDS", "60"))
 
-
 # ════════════════════════════════════════════════════════════
 # CIRCUIT BREAKER PATTERN
 # ════════════════════════════════════════════════════════════
@@ -251,6 +250,7 @@ def build_user_prompt(
 
 ## Pronostico de Liquidez (14 dias)
 {fc_text}
+
 
 ## Contexto
 - Fecha: {today.strftime('%d de %B de %Y')}
