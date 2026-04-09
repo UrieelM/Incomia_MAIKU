@@ -33,10 +33,10 @@ from botocore.exceptions import ClientError
 AWS_REGION = "us-east-1"
 
 # Amazon Bedrock
-BEDROCK_MODEL_ID = "anthropic.claude-3-sonnet-20240229-v1:0"
+BEDROCK_MODEL_ID = "anthropic.claude-3-sonnet-20260229-v1:0"
 BEDROCK_MAX_TOKENS = 1024
 BEDROCK_TEMPERATURE = 0.4
-BEDROCK_ANTHROPIC_VERSION = "bedrock-2023-05-31"
+BEDROCK_ANTHROPIC_VERSION = "bedrock-2026-05-31"
 
 # Motor de Prediccion
 PREDICTION_HORIZON_DAYS = 14
