@@ -204,3 +204,5 @@ pyvenv.cfg
 venv
 Virtualenv
 pip-selfcheck.json
+
+.DS_Store
