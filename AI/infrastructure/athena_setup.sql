@@ -1,6 +1,6 @@
 -- ============================================================
 -- Athena DDL — Tablas externas sobre datos exportados a S3
--- Incomia (Equipo HAIKU)
+-- Incomia (Equipo MAIKU)
 -- ============================================================
 -- Los datos se exportan desde data_generator a S3 en formato
 -- JSON-Lines (NDJSON), particionados por year/month/day.

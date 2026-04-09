@@ -1,7 +1,7 @@
 """
 Lambda 3: Asesor Financiero IA — Incomia (Equipo HAIKU)
 =======================================================
-Microservicio que invoca Amazon Bedrock (Claude 3 Opus) para generar
+Microservicio que invoca Amazon Bedrock (Nova Pro) para generar
 consejos financieros personalizados para trabajadores gig en Mexico 2026.
 
 Arquitectura:
@@ -48,11 +48,12 @@ if not logger.handlers:
     logger.addHandler(_h)
 
 AWS_REGION = os.environ.get("AWS_REGION", "us-east-1")
-BEDROCK_MODEL_ID = os.environ.get("BEDROCK_MODEL_ID", "anthropic.claude-3-sonnet-20260229-v1:0")
+
+BEDROCK_MODEL_ID = os.environ.get("BEDROCK_MODEL_ID", "amazon.nova-pro-v1:0")
 BEDROCK_MAX_TOKENS = int(os.environ.get("BEDROCK_MAX_TOKENS", "1024"))
 BEDROCK_TEMPERATURE = float(os.environ.get("BEDROCK_TEMPERATURE", "0.4"))
 BEDROCK_TIMEOUT = int(os.environ.get("BEDROCK_TIMEOUT_SECONDS", "8"))
-BEDROCK_ANTHROPIC_VERSION = "bedrock-2026-05-31"
+# BEDROCK_ANTHROPIC_VERSION removed for Nova Native.
 
 DYNAMODB_TABLE_USERS = os.environ.get("DYNAMODB_TABLE_USERS", "incomia_users")
 DYNAMODB_TABLE_TRANSACTIONS = os.environ.get("DYNAMODB_TABLE_TRANSACTIONS", "incomia_transactions")
@@ -138,14 +139,18 @@ _circuit_breaker = CircuitBreaker()
 # SYSTEM PROMPT — Asesor Financiero Gig Mexico 2026
 # ════════════════════════════════════════════════════════════
 
-SYSTEM_PROMPT = """Eres "Incomia AI", un asesor financiero digital especializado en trabajadores de la economia gig en Mexico. Tu mision es ayudarles a estabilizar sus finanzas volatiles y construir resiliencia economica.
+SYSTEM_PROMPT = """Eres el "Asesor Incomia", el mejor amigo y aliado financiero para trabajadores independientes y de plataformas (gig economy) en México.
+Tu principal súper poder es escuchar sin juzgar. Entiendes lo que es tener días malos con pocos viajes, clientes que no pagan a tiempo o facturas inesperadas. Nunca hablas con palabras de banco ni términos raros, a menos que lo expliques como a un niño.
 
-## Tu Personalidad
-- **Empatico**: Entiendes que los ingresos irregulares generan estres y ansiedad financiera. Nunca juzgas ni usas tono condescendiente. Sabes que un repartidor no elige tener un mal dia de propinas.
-- **Practico**: Tus consejos son accionables HOY, no teoricos. Entiendes que estas personas no tienen acceso a productos financieros tradicionales, ni nomina, ni Infonavit.
-- **Directo**: Vas al punto. Usas lenguaje sencillo, sin jerga financiera innecesaria. Si usas un termino tecnico, lo explicas en una linea.
-- **Motivador**: Reconoces logros pequenos. Un fondo de $500 MXN ya es un avance real.
-- **Contextualizado Mexico 2026**: Conoces CETES Directo, Afore voluntaria, tandas, cajas de ahorro comunitarias, y las realidades del costo de vida en Mexico (renta, gasolina, comida, servicios).
+1. Tu Estilo de Conversación
+- Súper empático: Sé como un buen amigo que entiende las broncas del día a día.
+- Apoyo constante: Motívalos siempre que se pueda, $100 pesitos guardados son un logro gigante.
+- Evita el estrés: Usa palabras amigables que tranquilicen antes de darles un diagnóstico.
+- Zero jerga: Nunca hables de "liquidez, "tasas de amortización" o "apalancamiento" a menos que lo traduzcas a "dinero para mañana".
+- Realidad México: Háblales sobre Cetes Directo sin comisiones, tandas seguras y apartados.
+
+2. Lo que no puedes hacer:
+- Nunca recomiendes cosas riesgosas (cripto, trading, apps de préstamos engañosas).
 
 ## Reglas Estrictas
 1. SIEMPRE analiza el contexto financiero antes de aconsejar: ingresos recientes, gastos fijos proximos, saldo del fondo de estabilizacion, y el pronostico de liquidez.
@@ -270,7 +275,7 @@ def invoke_bedrock(
     upcoming_expenses: List[Dict[str, Any]],
     forecast: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
-    """Invoca Claude 3 Opus via Bedrock con Circuit Breaker."""
+    """Invoca Amazon Nova Pro via Bedrock con Circuit Breaker."""
     user_prompt = build_user_prompt(user, recent_transactions, upcoming_expenses, forecast)
 
     # Verificar circuit breaker
@@ -300,11 +305,14 @@ def invoke_bedrock(
         }
 
     request_body = {
-        "anthropic_version": BEDROCK_ANTHROPIC_VERSION,
-        "max_tokens": BEDROCK_MAX_TOKENS,
-        "temperature": BEDROCK_TEMPERATURE,
-        "system": SYSTEM_PROMPT,
-        "messages": [{"role": "user", "content": user_prompt}],
+        "inferenceConfig": {
+            "max_new_tokens": BEDROCK_MAX_TOKENS,
+            "temperature": BEDROCK_TEMPERATURE
+        },
+        "system": [{"text": SYSTEM_PROMPT}],
+        "messages": [
+            {"role": "user", "content": [{"text": user_prompt}]}
+        ]
     }
 
     try:
@@ -322,7 +330,8 @@ def invoke_bedrock(
             accept="application/json", body=json.dumps(request_body),
         )
         resp_body = json.loads(response["body"].read())
-        advice = resp_body["content"][0]["text"]
+        # Amazon Nova schema: output > message > content > text
+        advice = resp_body.get("output", {}).get("message", {}).get("content", [{}])[0].get("text", "")
 
         _circuit_breaker.record_success()
 
@@ -330,7 +339,7 @@ def invoke_bedrock(
             "statusCode": 200,
             "advice": advice,
             "metadata": {
-                "source": "bedrock_claude_opus",
+                "source": "bedrock_amazon_nova_pro",
                 "model_id": BEDROCK_MODEL_ID,
                 "user_id": user.get("user_id"),
                 "input_tokens": resp_body.get("usage", {}).get("input_tokens"),
