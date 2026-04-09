@@ -19,33 +19,30 @@ if not logger.handlers:
     logger.addHandler(_h)
 
 AWS_REGION = os.environ.get("AWS_REGION", "us-east-1")
-# Claude Sonnet 4.6 ARN or Model ID as requested by user
-BEDROCK_MODEL_ID = os.environ.get("BEDROCK_MODEL_ID", "anthropic.claude-4-6-sonnet-v1:0")
+# Amazon Nova Pro ARN or Model ID as requested by user
+BEDROCK_MODEL_ID = os.environ.get("BEDROCK_MODEL_ID", "amazon.nova-pro-v1:0")
 
-SYSTEM_PROMPT = """Eres el "Motor de Alertas Semanales Inteligentes" de Incomia, la plataforma financiera para trabajadores gig en México.
-Tu trabajo es analizar las últimas 30 transacciones financieras de un usuario y proveer recomendaciones estratégicas.
-Entiendes perfectamente las dinámicas del trabajo gig, los ingresos volátiles y la necesidad de priorizar la liquidez.
+SYSTEM_PROMPT = """Eres el "Motor de Alertas Semanales Inteligentes" de Incomia, pensado para cuidar el bolsillo de trabajadores freelancers y de plataformas (gig) en México de forma súper amigable.
+Tu misión es revisar sus últimas transacciones (máximo 30) para ayudarles a manejar mejor su dinero sin usar ningún término financiero complicado. Trátalos con muchísima empatía; sabes que su ingreso es inestable y hacen un gran esfuerzo diario. Valora su trabajo.
 
-## TUS REGLAS STRICTAS:
-1. DEBES retornar ESTRICTAMENTE un objeto JSON y NADA MÁS. 
-2. NO incluyas bloques de código, backticks (```json), ni texto antes o después del JSON. Sólo la cadena JSON.
-3. El JSON debe cumplir con la siguiente estructura exacta:
+REGLAS PARA TU RESPUESTA:
+1. Debes retornar ÚNICAMENTE un objeto JSON totalmente válido. Sin usar bloques `json` ni texto de relleno antes o después.
+2. Usa el siguiente formato estricto:
 {
   "top_3_discretionary_expenses": [
     {
-      "merchant": "Nombre del comercio (ej. Oxxo, Starbucks)",
+      "merchant": "Nombre del lugar (ej. Oxxo)",
       "amount": 0.00,
-      "category": "Categoría (ej. Antojos, Entretenimiento)"
+      "category": "Antojos o Varios"
     }
   ],
-  "weekly_alert": "UNA SOLA alerta o recomendación semanal consolidada. Ej. 'Notamos que gastaste $400 en plataformas de streaming; considera unificar para mejorar tu liquidez'. Usa tono empático y sin jerga.",
+  "weekly_alert": "UNA ÚNICA motivación/alerta semanal. Ej. '¡Hola! Eres un guerrero. Revisando tus gastos noté que se nos fueron $400 en cafés. ¿Qué tal si la próxima semana los preparamos en casa y nos ahorramos un dinerito?'",
   "salary_adjustment_suggestion": {
      "suggested_adjustment": 0.00,
-     "reason": "Justificación de por qué se sugiere ajustar el 'sueldo artificial' basado en los flujos recientes."
+     "reason": "Explícales como a un amigo por qué deberían subir o bajar el 'sueldo artificial' de su app para estar más tranquilos este mes."
   }
 }
-
-Si notas que los flujos (ingresos netos) son consistentemente positivos o negativos, usa el `suggested_adjustment` para sugerir un aumento o reducción del sueldo artificial respectivamente. Si es negativo (reducción), pon un valor negativo.
+Si ves que les va bien o que gastan de más, ajusta la sugerencia de sueldo artificial (positivo o negativo) para que se mantengan saludables.
 """
 
 def _build_user_prompt(transactions: List[Dict[str, Any]]) -> str:
@@ -114,13 +111,15 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         client = boto3.client("bedrock-runtime", region_name=AWS_REGION)
         user_prompt = _build_user_prompt(transactions)
 
+        # Format payload specifically for Amazon Nova Pro
         request_body = {
-            "anthropic_version": "bedrock-2023-05-31",
-            "max_tokens": 1000,
-            "temperature": 0.2, # Baja temperatura para mayor consistencia en JSON
-            "system": SYSTEM_PROMPT,
+            "inferenceConfig": {
+                "max_new_tokens": 1000,
+                "temperature": 0.2
+            },
+            "system": [{"text": SYSTEM_PROMPT}],
             "messages": [
-                {"role": "user", "content": user_prompt}
+                {"role": "user", "content": [{"text": user_prompt}]}
             ]
         }
 
@@ -132,7 +131,8 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         )
 
         resp_body = json.loads(response["body"].read())
-        content_text = resp_body.get("content", [{}])[0].get("text", "").strip()
+        # Amazon Nova returns output in output.message.content
+        content_text = resp_body.get("output", {}).get("message", {}).get("content", [{}])[0].get("text", "").strip()
 
         # Limpiar posibles delimitadores markdown si Claude ignora la instruccion
         if content_text.startswith("```json"):

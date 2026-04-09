@@ -12,7 +12,7 @@ El generador de alertas consolidado procesa el historial transaccional del usuar
   2. Las transacciones se formatean a cadena junto con un `System Prompt` enfocado contextualmente en la economía gig.
   3. Se realiza una solicitud API con el cliente de `boto3` dirigiendo el payload al servicio AWS Bedrock.
 - **Integración con Amazon Bedrock:** 
-  - Empleamos **Claude Sonnet 4.6** (`anthropic.claude-4-6-sonnet-v1:0`). 
+  - Empleamos **Amazon Nova Pro** (`amazon.nova-pro-v1:0`), de manera nativa en Bedrock. 
   - La temperatura generativa se configura extremadamente baja (`0.2`). 
   - Se instruye estrictamente devolver *solo un objeto JSON* que contiene:
     1. Un "Top 3" general de los mayores gastos discrecionales categorizados ("entretenimiento", "comida fuera") listando los establecimientos.
@@ -31,7 +31,7 @@ Calcula de manera exacta los golpes al poder adquisitivo basados en los propios 
 
 ### 3. Asesor Financiero Base (`advice_generator.py`)
 - Sigue la misma estructura base que `weekly_alerts`, pero llama activamente a predicciones extensas de probabilidad de quiebra (`liquidity_forecast`). 
-- Emplea opcionalmente **Claude Sonnet 4.6** para interacciones conversacionales profundas donde evalúa metas de resiliencia completas dentro de un contexto de hasta 14 días.
+- Emplea opcionalmente **Amazon Nova Pro** para interacciones conversacionales profundas, con una ingeniería de prompt altamente empática donde evalúa metas de resiliencia completas dentro de un contexto de hasta 14 días.
 
 ## Diagramas de Flujo y Casos de Uso
 
@@ -40,7 +40,7 @@ Calcula de manera exacta los golpes al poder adquisitivo basados en los propios 
 sequenceDiagram
     participant EventBridge
     participant Lambda as weekly_alerts.py
-    participant Bedrock as Claude Sonnet 4.6
+    participant Bedrock as Amazon Nova Pro
     participant Fallback
     
     EventBridge->>Lambda: Dispara alerta semanal (30 transacciones)
