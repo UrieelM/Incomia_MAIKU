@@ -39,7 +39,8 @@ import {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-const IS_MOCK = !import.meta.env.VITE_API_BASE_URL;
+const IS_MOCK = true; // Forzado para Demo Estable
+
 const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 /**
@@ -473,14 +474,34 @@ export const financialService = {
   // ── updateSalaryConfig (placeholder — no hay Lambda dedicada aún) ─────────
 
   updateSalaryConfig: async (
-    _userId: string,
+    userId: string,
     config: Partial<SalaryConfig>
   ): Promise<SalaryConfig> => {
-    await delay(500);
-    // TODO: Cuando se agregue Lambda de update_user_config, llamarla aquí
-    console.info('[Incomia] updateSalaryConfig → pendiente de Lambda dedicada', config);
-    return { ...mockSalaryConfig, ...config };
+    if (IS_MOCK) {
+      await delay(500);
+      return { ...mockSalaryConfig, ...config };
+    }
+
+    // Mapeo UI -> Backend
+    const body: Record<string, any> = {};
+    if (config.desiredAmount !== undefined) body.simulated_salary = config.desiredAmount;
+    if (config.frequency !== undefined) body.salary_frequency = config.frequency;
+
+    if (Object.keys(body).length === 0) return { ...mockSalaryConfig, ...config };
+
+    const res = await apiClient.patch(`/users/${userId}`, body);
+    
+    // El backend retorna el objeto de usuario completo
+    const userData = res.data;
+    return {
+      desiredAmount: userData.simulated_salary,
+      frequency: userData.salary_frequency,
+      recommendedAmount: userData.simulated_salary,
+      impact: 0,
+      confidence: 0,
+    };
   },
+
 
   // ── uploadData (S3 pre-signed URL) ────────────────────────────────────────
 

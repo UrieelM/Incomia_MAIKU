@@ -19,8 +19,9 @@ export function LoginPage() {
 
     try {
       await login(email, password);
-      navigate('/');
+      navigate('/app');
     } catch {
+
       // El error ya está en authError del store
     }
   };

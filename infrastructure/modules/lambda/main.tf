@@ -69,6 +69,13 @@ data "archive_file" "get_dashboard" {
   output_path = "${path.module}/dist/get_dashboard.zip"
 }
 
+data "archive_file" "update_user_config" {
+  type        = "zip"
+  source_dir  = "${path.module}/${var.lambda_code_base_path}/lambdas/update_user_config"
+  output_path = "${path.module}/dist/update_user_config.zip"
+}
+
+
 data "archive_file" "analyze_expenses" {
   type        = "zip"
   output_path = "${path.module}/dist/analyze_expenses.zip"
@@ -341,6 +348,50 @@ resource "aws_lambda_permission" "get_dashboard" {
   principal     = "apigateway.amazonaws.com"
   source_arn    = "arn:aws:execute-api:${var.aws_region}:${data.aws_caller_identity.current.account_id}:${var.api_id}/*/*/users/*/dashboard"
 }
+
+# =====================================================================
+# LAMBDA EXTRA: update_user_config — PATCH /users/{userId}
+# Actualiza sueldo y modo del usuario.
+# =====================================================================
+resource "aws_lambda_function" "update_user_config" {
+  function_name    = "${var.project_name}-update-user-config-${var.env}"
+  filename         = data.archive_file.update_user_config.output_path
+  source_code_hash = data.archive_file.update_user_config.output_base64sha256
+  handler          = "handler.lambda_handler"
+  runtime          = "python3.11"
+  timeout          = 30
+  memory_size      = 256
+  role             = var.lambda_role_arn
+  layers           = [aws_lambda_layer_version.shared.arn]
+
+  environment {
+    variables = local.common_env_vars
+  }
+}
+
+resource "aws_apigatewayv2_integration" "update_user_config" {
+  api_id                 = var.api_id
+  integration_type       = "AWS_PROXY"
+  integration_uri        = aws_lambda_function.update_user_config.invoke_arn
+  payload_format_version = "2.0"
+}
+
+resource "aws_apigatewayv2_route" "update_user_config" {
+  api_id             = var.api_id
+  route_key          = "PATCH /users/{userId}"
+  target             = "integrations/${aws_apigatewayv2_integration.update_user_config.id}"
+  authorization_type = "JWT"
+  authorizer_id      = var.authorizer_id
+}
+
+resource "aws_lambda_permission" "update_user_config" {
+  statement_id  = "AllowAPIGatewayInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.update_user_config.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "arn:aws:execute-api:${var.aws_region}:${data.aws_caller_identity.current.account_id}:${var.api_id}/*/*/users/*"
+}
+
 
 # =====================================================================
 # LAMBDA 5: analyze_expenses — POST /users/{userId}/analyze

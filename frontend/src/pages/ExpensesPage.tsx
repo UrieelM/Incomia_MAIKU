@@ -40,9 +40,27 @@ const quickAddCategories = [
 ];
 
 export function ExpensesPage() {
-  const { expenses, salaryConfig } = useAppStore();
+  const { expenses, salaryConfig, logExpense, fetchDashboardData } = useAppStore();
   const { format } = useCurrency();
   const [activeTab, setActiveTab] = useState('mensual');
+  const [isAdding, setIsAdding] = useState(false);
+
+  // Helper para añadir gasto rápido
+  const handleQuickAdd = async (category: string) => {
+    setIsAdding(true);
+    try {
+      await logExpense({
+        amount: 50, // Monto por defecto para demo
+        merchant: `Gasto rápido: ${category}`,
+        date: new Date().toISOString().split('T')[0],
+      });
+      await fetchDashboardData();
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsAdding(false);
+    }
+  };
 
   const totalMonthly = expenses.reduce((acc, curr) => acc + curr.amount, 0);
   const salaryLimit = salaryConfig?.desiredAmount || 3400;
@@ -181,7 +199,12 @@ export function ExpensesPage() {
 
          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 italic">
             {quickAddCategories.map((cat, i) => (
-              <button key={i} className="p-6 bg-white dark:bg-white/5 border border-slate-100 dark:border-white/10 rounded-[32px] flex flex-col items-center gap-4 hover:premium-hover premium-transition group italic">
+              <button 
+                key={i} 
+                onClick={() => handleQuickAdd(cat.label)}
+                disabled={isAdding}
+                className="p-6 bg-white dark:bg-white/5 border border-slate-100 dark:border-white/10 rounded-[32px] flex flex-col items-center gap-4 hover:premium-hover premium-transition group italic disabled:opacity-50"
+              >
                  <div className="w-12 h-12 bg-slate-50 dark:bg-white/5 rounded-2xl flex items-center justify-center text-slate-400 dark:text-slate-500 group-hover:bg-primary dark:group-hover:bg-emerald-500 group-hover:text-white transition-colors italic">
                     <cat.icon size={24} />
                  </div>
@@ -190,6 +213,7 @@ export function ExpensesPage() {
             ))}
          </div>
       </div>
+
 
       {/* Expenses Table */}
       <div className="space-y-6 pt-4 italic">

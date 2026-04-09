@@ -16,14 +16,15 @@ import { cn } from '../../utils/cn';
 import { useAppStore } from '../../store/useAppStore';
 
 const menuItems = [
-  { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard',    path: '/' },
-  { id: 'salary',    icon: Settings2,       label: 'Salary Config', path: '/salary' },
-  { id: 'cashflow',  icon: ArrowUpRight,    label: 'Cash Flow',     path: '/cashflow' },
-  { id: 'deposits',  icon: History,         label: 'Deposits',      path: '/deposits' },
-  { id: 'expenses',  icon: Receipt,         label: 'Expenses',      path: '/expenses' },
-  { id: 'savings',   icon: PieChart,        label: 'Savings',       path: '/savings' },
-  { id: 'ai',        icon: Brain,           label: 'Asesor IA',     path: '/ai' },
+  { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard',    path: '/app' },
+  { id: 'salary',    icon: Settings2,       label: 'Salary Config', path: '/app/salary' },
+  { id: 'cashflow',  icon: ArrowUpRight,    label: 'Cash Flow',     path: '/app/cashflow' },
+  { id: 'deposits',  icon: History,         label: 'Deposits',      path: '/app/deposits' },
+  { id: 'expenses',  icon: Receipt,         label: 'Expenses',      path: '/app/expenses' },
+  { id: 'savings',   icon: PieChart,        label: 'Savings',       path: '/app/savings' },
+  { id: 'ai',        icon: Brain,           label: 'Asesor IA',     path: '/app/ai' },
 ];
+
 
 export function Sidebar() {
   const navigate = useNavigate();
@@ -68,7 +69,8 @@ export function Sidebar() {
 
       <div className="mt-auto p-8 space-y-4">
         <NavLink
-          to="/ai"
+          to="/app/ai"
+
           className={({ isActive }) => cn(
             'flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors',
             isActive
@@ -82,7 +84,8 @@ export function Sidebar() {
 
         <div className="space-y-1 pt-4 border-t border-slate-50 dark:border-white/5">
           <NavLink 
-            to="/settings"
+            to="/app/settings"
+
             className={({ isActive }) => cn(
               "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium premium-transition italic",
               isActive 

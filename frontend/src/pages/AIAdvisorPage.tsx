@@ -44,7 +44,8 @@ function formatMXN(value: number): string {
 }
 
 /** Convierte markdown ligero a JSX (solo bold y bullets) */
-function renderMarkdown(text: string): JSX.Element[] {
+function renderMarkdown(text: string): React.ReactNode[] {
+
   return text.split('\n').map((line, i) => {
     // Encabezados **texto**
     const boldLine = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
@@ -92,11 +93,12 @@ function RiskBadge({ level, label }: { level: string; label: string }) {
     medium: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-700',
     high:   'bg-red-50 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-700',
   };
-  const icons: Record<string, JSX.Element> = {
+  const icons: Record<string, React.ReactNode> = {
     low:    <CheckCircle size={14} />,
     medium: <AlertTriangle size={14} />,
     high:   <AlertTriangle size={14} />,
   };
+
 
   return (
     <span className={cn(
@@ -126,20 +128,26 @@ function ChartTooltip({ active, payload, label }: any) {
 // ── Página principal ──────────────────────────────────────────────────────────
 
 export function AIAdvisorPage() {
-  const forecast         = useAppStore((s) => s.forecast);
-  const aiAdvice         = useAppStore((s) => s.aiAdvice);
-  const isLoadingForecast  = useAppStore((s) => s.isLoadingForecast);
-  const isLoadingAIAdvice  = useAppStore((s) => s.isLoadingAIAdvice);
-  const fetchForecast    = useAppStore((s) => s.fetchForecast);
-  const fetchAIAdvice    = useAppStore((s) => s.fetchAIAdvice);
+  const { 
+    forecast, 
+    aiAdvice, 
+    fetchForecast, 
+    fetchAIAdvice, 
+    isLoadingForecast, 
+    isLoadingAIAdvice 
+  } = useAppStore();
 
   const [activeTab, setActiveTab] = useState<'advice' | 'forecast'>('advice');
 
-  // Carga inicial
+  // Carga inicial automática
   useEffect(() => {
-    if (!forecast)  fetchForecast();
-    if (!aiAdvice)  fetchAIAdvice();
-  }, []);  // eslint-disable-line react-hooks/exhaustive-deps
+    if (!forecast && !isLoadingForecast) {
+      fetchForecast();
+    }
+    if (!aiAdvice && !isLoadingAIAdvice) {
+      fetchAIAdvice();
+    }
+  }, [forecast, aiAdvice, fetchForecast, fetchAIAdvice, isLoadingForecast, isLoadingAIAdvice]);
 
   const handleRefresh = () => {
     fetchForecast();
@@ -152,6 +160,7 @@ export function AIAdvisorPage() {
     date: d.date,
     balance: Math.round(d.projected_balance),
   })) ?? [];
+
 
   const minBalance = forecast?.min_projected_balance ?? 0;
 

@@ -1,4 +1,4 @@
-# Infraestructura Incomia (Proyecto HAIKU)
+# Infraestructura Incomia (Proyecto MAIKU)
 
 Bienvenido a la documentación de infraestructura del proyecto Incomia. Este documento explica detalle a detalle los servicios aprovisionados en AWS utilizando Terraform, el objetivo de cada uno, por qué los elegimos y cómo se interconectan.
 
