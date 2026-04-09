@@ -202,5 +202,7 @@ terraform.rc
 [Ss]cripts
 pyvenv.cfg
 .venv
+venv
+Virtualenv
 pip-selfcheck.json
 
