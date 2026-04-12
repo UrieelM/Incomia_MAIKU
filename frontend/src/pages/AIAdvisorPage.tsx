@@ -89,14 +89,14 @@ function renderMarkdown(text: string): React.ReactNode[] {
 
 function RiskBadge({ level, label }: { level: string; label: string }) {
   const colors: Record<string, string> = {
-    low:    'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-700',
+    low: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-700',
     medium: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-700',
-    high:   'bg-red-50 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-700',
+    high: 'bg-red-50 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-700',
   };
   const icons: Record<string, React.ReactNode> = {
-    low:    <CheckCircle size={14} />,
+    low: <CheckCircle size={14} />,
     medium: <AlertTriangle size={14} />,
-    high:   <AlertTriangle size={14} />,
+    high: <AlertTriangle size={14} />,
   };
 
 
@@ -128,12 +128,12 @@ function ChartTooltip({ active, payload, label }: any) {
 // ── Página principal ──────────────────────────────────────────────────────────
 
 export function AIAdvisorPage() {
-  const { 
-    forecast, 
-    aiAdvice, 
-    fetchForecast, 
-    fetchAIAdvice, 
-    isLoadingForecast, 
+  const {
+    forecast,
+    aiAdvice,
+    fetchForecast,
+    fetchAIAdvice,
+    isLoadingForecast,
     isLoadingAIAdvice,
     totalIncome,
     totalExpenses,
@@ -165,7 +165,7 @@ export function AIAdvisorPage() {
 
   // ── Chart data ─────────────────────────────────────────────────────────────
   const chartData = forecast?.daily_projection.map((d) => ({
-    day:  d.day,
+    day: d.day,
     date: d.date,
     balance: Math.round(d.projected_balance),
   })) ?? [];

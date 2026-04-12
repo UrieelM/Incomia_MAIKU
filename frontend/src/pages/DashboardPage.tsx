@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
-import { 
-  Calendar, 
-  ShieldCheck, 
+import {
+  Calendar,
+  ShieldCheck,
   ArrowRight,
   TrendingUp,
   CreditCard,
@@ -18,12 +18,12 @@ import { useCurrency } from '../hooks/useCurrency';
 import { cn } from '../utils/cn';
 
 export function DashboardPage() {
-  const { 
-    summary, 
-    cashFlowHistory, 
-    advice, 
-    predictions, 
-    fetchDashboardData, 
+  const {
+    summary,
+    cashFlowHistory,
+    advice,
+    predictions,
+    fetchDashboardData,
     isLoading,
     totalIncome,
     totalExpenses,
@@ -40,7 +40,7 @@ export function DashboardPage() {
   const reserveTarget = (salaryConfig?.desiredAmount || 3200) * 3;
   const reserveProgress = reserveTarget > 0 ? Math.min(100, Math.round((cushion / reserveTarget) * 100)) : 0;
 
-  
+
   const { format } = useCurrency();
 
   useEffect(() => {
@@ -56,8 +56,8 @@ export function DashboardPage() {
     );
   }
 
-  const nextIncomeAmount = salaryConfig?.desiredAmount !== undefined && salaryConfig.desiredAmount > 0 
-    ? salaryConfig.desiredAmount 
+  const nextIncomeAmount = salaryConfig?.desiredAmount !== undefined && salaryConfig.desiredAmount > 0
+    ? salaryConfig.desiredAmount
     : summary.nextIncome.amount;
 
 
@@ -73,15 +73,15 @@ export function DashboardPage() {
         {/* Salary Artificial Card (Crítico) */}
         <Card className="lg:col-span-12 xl:col-span-5 bg-primary dark:bg-primary-dark text-white p-10 relative overflow-hidden group border-none italic">
           <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500 rounded-full opacity-10 -mr-20 -mt-20 group-hover:scale-110 transition-transform italic" />
-          
+
           <div className="relative z-10 italic">
             <div className="flex items-center gap-2 mb-6 italic">
               <span className="bg-emerald-500 text-white text-[10px] font-bold px-2 py-0.5 rounded italic">ESTABILIZADO POR IA</span>
               <p className="text-slate-400 text-[10px] uppercase tracking-widest font-bold italic">Tu Próximo Salario Artificial</p>
             </div>
-            
+
             <h3 className="text-5xl font-display font-bold mb-8 italic">{format(nextIncomeAmount)}</h3>
-            
+
             <div className="flex flex-col md:flex-row gap-6 italic">
 
               <div className="flex items-center gap-3 bg-white/10 w-fit px-5 py-3 rounded-2xl backdrop-blur-sm italic">
@@ -126,9 +126,9 @@ export function DashboardPage() {
                 <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest italic">Cobertura de Seguridad (Proyectada: {format(summary.stabilityReserve.target)})</p>
                 <p className="text-lg font-display font-bold text-primary dark:text-white italic">{summary.stabilityReserve.progress}%</p>
               </div>
-              
+
               <div className="h-4 bg-slate-100 dark:bg-white/10 rounded-full overflow-hidden italic">
-                <div 
+                <div
                   className="h-full bg-emerald-500 rounded-full transition-all duration-1000 ease-out italic"
                   style={{ width: `${reserveProgress}%` }}
                 />
@@ -241,7 +241,7 @@ export function DashboardPage() {
             <div className="italic">
               <h3 className="text-4xl font-display font-bold text-primary dark:text-white italic leading-tight">¡Te mereces <br /> <span className="text-emerald-500 italic">un premio!</span></h3>
               <p className="text-slate-400 text-sm mt-4 italic leading-relaxed">
-                Tus ingresos han superado con creces tu sueldo deseado y tu colchón de seguridad es robusto. Has trabajado duro para tener esta paz financiera. 
+                Tus ingresos han superado con creces tu sueldo deseado y tu colchón de seguridad es robusto. Has trabajado duro para tener esta paz financiera.
                 <br /><br />
                 <span className="text-white font-bold italic">Es momento de darte un pequeño regalo. ✨</span>
               </p>

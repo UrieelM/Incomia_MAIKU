@@ -51,14 +51,14 @@ export function CashFlowPage() {
           </p>
         </div>
 
-          <div className="text-right">
-            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Sueldo Estabilizado</p>
-            <p className="text-3xl font-display font-bold text-primary dark:text-white">{format(desiredSalary)}</p>
-          </div>
-          <div className="text-right">
-            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Puntuación Salud</p>
-            <p className="text-3xl font-display font-bold text-emerald-500">94/100</p>
-          </div>
+        <div className="text-right">
+          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Sueldo Estabilizado</p>
+          <p className="text-3xl font-display font-bold text-primary dark:text-white">{format(desiredSalary)}</p>
+        </div>
+        <div className="text-right">
+          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Puntuación Salud</p>
+          <p className="text-3xl font-display font-bold text-emerald-500">94/100</p>
+        </div>
 
       </div>
 
