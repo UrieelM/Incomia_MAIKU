@@ -2,6 +2,8 @@
 
 > *Suavizando ingresos volátiles con IA y Arquitectura Serverless en AWS.*
 
+## 🔗 [Ver Solución en Vivo](http://incomia-frontend-dev.s3-website-us-east-1.amazonaws.com/)
+
 ![AWS](https://img.shields.io/badge/AWS-%23232F3E?style=for-the-badge&logo=amazon-aws&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-%23005571?style=for-the-badge&logo=fastapi&logoColor=white)
 ![React](https://img.shields.io/badge/React-%2320232A?style=for-the-badge&logo=react&logoColor=%2361DAFB)
@@ -11,6 +13,7 @@
 ---
 
 ## 🚀 Misión del Proyecto
+
 **Incomia** es una plataforma *fintech* diseñada específicamente para trabajadores independientes y freelancers en México. Nuestra misión es eliminar la incertidumbre financiera mediante la **suavización de ingresos**: simulamos un salario estable calculando promedios y gestionando reservas dinámicas. Con el poder de **Amazon Bedrock**, proporcionamos asesoría financiera personalizada y análisis de gastos en tiempo real.
 
 ---
@@ -72,10 +75,13 @@ Incomia utiliza un enfoque **Event-Driven Serverless** para garantizar escalabil
 ## 🛠️ Detalle de Funciones Lambda Principales
 
 ### 💰 `log_income`
+
 Calcula el "Salario Simulado" basado en una ventana móvil de 6 meses. Si el ingreso supera el promedio, el excedente se mueve automáticamente a una **Reserva de Estabilidad**.
 
 ### 🤖 `get_ai_advice`
+
 Utiliza el historial de transacciones y el puntaje de riesgo para generar consejos empáticos y accionables.
+
 * **Trigger**: API Get / EventBridge `ForecastReady`.
 * **Respuesta**: Markdown con insights personalizados.
 
@@ -84,22 +90,28 @@ Utiliza el historial de transacciones y el puntaje de riesgo para generar consej
 ## 🛠️ Guía de Desarrollo
 
 ### Frontend
+
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
+
 Requisitos: Archivo `.env` configurado con `VITE_API_BASE_URL` y datos de Cognito.
 
 ### Backend (Local)
+
 Para invocar lambdas localmente usando AWS SAM:
+
 ```bash
 cd backend/incomia-backend
 sam local invoke "GetDashboardFunction" --event event.json
 ```
 
 ### Infraestructura
+
 Para desplegar cambios en la nube:
+
 ```bash
 cd infrastructure
 terraform init
@@ -109,6 +121,7 @@ terraform apply
 ---
 
 ## 🛡️ Seguridad e IAM
+
 El sistema se adhiere al principio de **Privilegio Mínimo**. Los roles `lambda_exec` están restringidos a los recursos específicos del proyecto `incomia-*` en DynamoDB, S3 y SSM.
 
 ---
@@ -119,8 +132,8 @@ El sistema se adhiere al principio de **Privilegio Mínimo**. Los roles `lambda_
 | :--- | :--- | :--- |
 | `POST` | `/users` | Registro inicial de usuario. |
 | `POST` | `/users/{id}/income` | Registro de ingreso + Cómputo de reserva. |
-| `GET` | `/users/{id}/dashboard`| Vista consolidada (Next Payday, Balances). |
-| `GET` | `/users/{id}/ai/advice`| Asesoría financiera impulsada por IA. |
+| `GET` | `/users/{id}/dashboard` | Vista consolidada (Next Payday, Balances). |
+| `GET` | `/users/{id}/ai/advice` | Asesoría financiera impulsada por IA. |
 
 ---
 
